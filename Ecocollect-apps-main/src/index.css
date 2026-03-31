@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #1A5C34;
+  --color-primary-mid: #2E8B57;
+  --color-primary-light: #52B788;
+  --color-primary-pale: #D8F3DC;
+  --color-enterprise: #1B4F72;
+  --color-enterprise-lt: #AED6F1;
+  --color-collector: #E67E22;
+  --color-collector-lt: #FDEBD0;
+
+  --color-status-pending: #F39C12;
+  --color-status-accepted: #2980B9;
+  --color-status-assigned: #8E44AD;
+  --color-status-on-way: #E67E22;
+  --color-status-collected: #27AE60;
+  --color-status-confirmed: #145A32;
+  --color-status-rejected: #E74C3C;
+  --color-status-cancelled: #95A5A6;
+
+  --font-display: "Lexend", sans-serif;
+  --font-body: "Be Vietnam Pro", sans-serif;
+  --font-stats: "Barlow Condensed", sans-serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    font-family: var(--font-body);
+    background-color: #F4FAF6;
+    color: #1A2421;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
+}
+
+@layer utilities {
+  .shadow-card {
+    box-shadow: 0 2px 16px rgba(26,92,52,0.10);
+  }
+  .shadow-hover {
+    box-shadow: 0 8px 32px rgba(26,92,52,0.18);
+  }
+}
