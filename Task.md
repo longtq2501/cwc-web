@@ -8,20 +8,20 @@
 *   **Layout & Menu Điều hướng (Navigation):** Dựng khung giao diện chung (Header, Footer, Sidebar). Tùy biến hiển thị các mục menu dựa trên quyền truy cập (Role-based access).
 
 ### Nhóm F2: Chức năng Người dân (Citizen Pages)
-*   **Trang Tạo báo cáo rác (Report Form):** Giao diện form điền mô tả, chọn loại rác, lấy tọa độ GPS và upload hình ảnh. *(Tùy chọn: Tích hợp nút upload ảnh qua AI để tự động chọn loại rác)*.
-*   **Trang Theo dõi trạng thái & Khiếu nại:** Hiển thị danh sách các báo cáo đã gửi cùng trạng thái (Pending, Accepted, Assigned, Collected). Nút và Modal (popup) cho phép gửi phản hồi/khiếu nại nếu thu gom sai cam kết.
-*   **Trang Bảng xếp hạng & Điểm thưởng (Leaderboard & Points):** Giao diện xem số điểm thưởng cá nhân, lịch sử nhận điểm và Bảng xếp hạng (Leaderboard) những người dùng có điểm cao nhất theo khu vực.
+*   **Trang Tạo báo cáo rác (Report Form):** Giao diện form báo cáo rác/tái chế cần thu gom: điền mô tả, thực hiện phân loại rác tại nguồn (chọn loại rác khi tạo báo cáo), lấy tọa độ GPS và upload hình ảnh. *(Tùy chọn: Tích hợp nút upload ảnh qua AI để tự động chọn loại rác)*.
+*   **Trang Theo dõi trạng thái & Khiếu nại:** Theo dõi trạng thái thu gom của từng báo cáo (Pending, Accepted, Assigned, Collected). Nút và Modal (popup) cho phép gửi phản hồi hoặc khiếu nại khi việc thu gom không đúng cam kết.
+*   **Trang Bảng xếp hạng & Điểm thưởng (Leaderboard & Points):** Giao diện xem số điểm thưởng cá nhân (nhận điểm thưởng khi báo cáo hợp lệ và phân loại đúng), xem lịch sử điểm thưởng và bảng xếp hạng theo khu vực.
 
-### Nhóm F3: Chức năng Doanh nghiệp (Enterprise Pages)
-*   **Trang Hồ sơ năng lực & Cấu hình:** Giao diện cho phép doanh nghiệp đăng ký, cập nhật năng lực (Loại rác tiếp nhận, công suất, khu vực) và thiết lập quy tắc tính điểm cho Citizen.
-*   **Trang Quản lý yêu cầu (Requests Dashboard):** Danh sách các yêu cầu thu gom có trong khu vực, kèm các nhãn gợi ý ưu tiên. Có các nút thao tác nhanh: "Tiếp nhận" hoặc "Từ chối".
-*   **Trang Điều phối & Theo dõi (Assignment & Tracking):** Giao diện hiển thị danh sách yêu cầu đã nhận. Có Dropdown/Bảng để chọn và gán (Assign) nhiệm vụ cho từng Collector. Hiển thị trạng thái tiến độ thời gian thực.
-*   **Trang Báo cáo thống kê (Reports):** Biểu đồ và bảng dữ liệu thống kê khối lượng rác đã thu gom/tái chế, lọc theo thời gian, loại rác và khu vực.
+### Nhóm F3: Chức năng Doanh nghiệp (Recycling Enterprise Pages)
+*   **Trang Hồ sơ năng lực & Cấu hình:** Giao diện cho phép doanh nghiệp đăng ký và quản lý năng lực xử lý rác: Loại rác tiếp nhận/Công suất xử lý/Khu vực phục vụ. Tạo và cấu hình quy tắc tính điểm thưởng cho Citizen (theo loại rác, chất lượng báo cáo, thời gian xử lý…).
+*   **Trang Quản lý yêu cầu (Requests Dashboard):** Nhận và quyết định tiếp nhận hoặc từ chối các yêu cầu thu gom trong phạm vi hoạt động. Xem danh sách yêu cầu thu gom được gợi ý ưu tiên xử lý dựa trên các tiêu chí cấu hình (Optional).
+*   **Trang Điều phối & Theo dõi (Assignment & Tracking):** Gán và điều phối yêu cầu thu gom cho Collector thuộc doanh nghiệp. Theo dõi tiến độ xử lý và trạng thái thu gom theo thời gian thực.
+*   **Trang Báo cáo thống kê (Reports):** Xem báo cáo khối lượng rác đã thu gom và tái chế theo loại/khu vực/thời gian.
 
 ### Nhóm F4: Chức năng Collector & Quản trị viên (Collector & Admin Pages)
-*   **Trang Nhiệm vụ thu gom (Collector App):** Giao diện ưu tiên Mobile (Mobile-first). Hiển thị danh sách task. Có nút thay đổi trạng thái (Assigned -> On the way -> Collected) và form upload ảnh minh chứng.
-*   **Trang Lịch sử Collector:** Danh sách các công việc đã hoàn thành và thống kê kết quả thu gom cá nhân.
-*   **Trang Quản trị Hệ thống (Admin Dashboard):** Bảng điều khiển cho Admin. Giao diện danh sách User, nút duyệt/từ chối đăng ký doanh nghiệp và giao diện xử lý các khiếu nại.
+*   **Trang Nhiệm vụ thu gom (Collector App):** Giao diện ưu tiên Mobile (Mobile-first). Nhận các yêu cầu thu gom được phân công từ Recycling Enterprise. Cập nhật trạng thái thu gom theo thời gian thực (Assigned / On the way / Collected). Xác nhận hoàn tất thu gom bằng hình ảnh và thông tin trạng thái.
+*   **Trang Lịch sử Collector:** Xem lịch sử công việc và số lượng yêu cầu đã hoàn thành.
+*   **Trang Quản trị Hệ thống (Admin Dashboard):** Bảng điều khiển cho Administrator. Quản lý tài khoản và phân quyền. Giám sát hoạt động tổng thể của hệ thống. Tiếp nhận và giải quyết tranh chấp/khiếu nại.
 
 ---
 
@@ -29,20 +29,19 @@
 
 ### Nhóm B1: Cơ sở dữ liệu & Phân quyền (DB & Auth)
 *   **Database & Migrations:** Thiết kế và khởi tạo các bảng DB: `Users`, `Roles`, `Waste_Requests`, `Waste_Types`, `Points`, `Complaints`. Cấu hình Seeder để có sẵn dữ liệu mẫu (Dummy data).
-*   **Authentication & Role Middleware:** Viết API Đăng nhập, Đăng ký. Thiết lập Middleware để bảo vệ và phân quyền cho các routes (Chỉ Admin vào route Admin, Enterprise vào route Enterprise...).
+*   **Authentication & Role Middleware:** Viết API Đăng nhập, Đăng ký. Thiết lập Middleware để bảo vệ và phân quyền cho các routes (Quản lý tài khoản và phân quyền).
 
 ### Nhóm B2: API dành cho Người dân (Citizen APIs)
-*   **Waste Report APIs:** API tạo báo cáo thu gom (nhận tọa độ GPS, phân loại rác và xử lý file upload ảnh). API trả về danh sách lịch sử báo cáo của user kèm trạng thái.
-*   **Gamification APIs:** API tự động cộng điểm cho Citizen dựa vào logic/cấu hình điểm khi một báo cáo chuyển sang trạng thái "Collected" hoàn tất. API lịch sử điểm.
-*   **Leaderboard APIs:** API tính toán tổng điểm và trả về danh sách xếp hạng (Top Users) theo các khu vực.
+*   **Waste Report APIs:** API tạo báo cáo thu gom (nhận tọa độ GPS, phân loại rác và xử lý file upload ảnh). API trả về danh sách theo dõi trạng thái thu gom của từng báo cáo.
+*   **Gamification APIs:** API nhận điểm thưởng cho Citizen khi báo cáo hợp lệ và phân loại đúng. API xem lịch sử điểm thưởng.
+*   **Leaderboard APIs:** API tính toán tổng điểm và trả về danh sách bảng xếp hạng theo khu vực.
 *   **AI Support API (Tùy chọn):** API tiếp nhận file ảnh, gửi qua dịch vụ external AI (hoặc script Python) để nhận về nhãn phân loại rác và trả về Frontend.
 
 ### Nhóm B3: API dành cho Doanh nghiệp (Enterprise APIs)
-*   **Enterprise Profile APIs:** API cập nhật hồ sơ năng lực của doanh nghiệp và API lưu cấu hình quy tắc tính điểm.
-*   **Request Management APIs:** API truy vấn danh sách yêu cầu đang Pending theo khu vực, kèm thuật toán sắp xếp mức độ ưu tiên. API cập nhật trạng thái tiếp nhận/từ chối.
-*   **Assignment & Dashboard APIs:** API gán báo cáo cho `collector_id`. API truy xuất tiến độ trạng thái (Realtime) các task hiện tại và API tính toán tổng lượng rác xuất ra báo cáo thống kê.
+*   **Enterprise Profile APIs:** API đăng ký và quản lý năng lực xử lý rác (loại rác, công suất, khu vực). API tạo và cấu hình quy tắc tính điểm thưởng.
+*   **Request Management APIs:** API lấy danh sách yêu cầu thu gom trong phạm vi hoạt động (có gợi ý ưu tiên). API quyết định tiếp nhận hoặc từ chối.
+*   **Assignment & Dashboard APIs:** API gán và điều phối yêu cầu thu gom cho Collector. API theo dõi tiến độ xử lý thời gian thực. API lấy báo cáo khối lượng rác đã thu gom.
 
 ### Nhóm B4: API dành cho Collector & Quản trị viên (Collector & Admin APIs)
-*   **Collector Task APIs:** API trả về list công việc của một Collector. API thay đổi trạng thái task (Assigned -> On the way -> Collected), trong đó bước hoàn thành yêu cầu đính kèm file ảnh minh chứng.
-*   **Admin User Management APIs:** API lấy danh sách tài khoản toàn hệ thống. API để Admin cập nhật trạng thái "Approved" hoặc "Rejected" cho tài khoản Doanh nghiệp mới.
-*   **Complaints & Monitoring APIs:** API tiếp nhận khiếu nại từ Citizen. API cung cấp dữ liệu tổng quan toàn hệ thống cho Dashboard của Admin.
+*   **Collector Task APIs:** API nhận các yêu cầu phân công. API cập nhật trạng thái thu gom (Assigned / On the way / Collected) và xác nhận hoàn tất bằng hình ảnh. API lịch sử công việc.
+*   **Admin Management APIs:** API quản lý tài khoản và phân quyền. API giám sát hoạt động tổng thể của hệ thống. API tiếp nhận và giải quyết tranh chấp/khiếu nại.
