@@ -28,6 +28,30 @@ class CollectorController extends Controller
         return response()->json($tasks);
     }
 
+    public function history(Request $request): JsonResponse
+    {
+        $collector = Collector::query()->where('user_id', $request->user()->id)->where('is_deleted', false)->first();
+
+        if (!$collector) {
+            return response()->json(['message' => 'Collector profile not found'], 422);
+        }
+
+        $tasks = CollectionAssignment::query()
+            ->with('request')
+            ->where('collector_id', $collector->id)
+            ->where('status', 'collected')
+            ->orderByDesc('collected_at')
+            ->paginate(10);
+
+        return response()->json([
+            'tasks' => $tasks,
+            'total_completed' => CollectionAssignment::query()
+                ->where('collector_id', $collector->id)
+                ->where('status', 'collected')
+                ->count(),
+        ]);
+    }
+
     public function startTask(Request $request, int $assignmentId): JsonResponse
     {
         $collector = Collector::query()->where('user_id', $request->user()->id)->where('is_deleted', false)->first();

@@ -6,6 +6,9 @@ use App\Models\Notification;
 use App\Models\PointRule;
 use App\Models\RecyclingEnterprise;
 use App\Models\WasteRequest;
+use App\Models\User;
+use App\Models\Complaint;
+use App\Models\Role;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -135,5 +138,79 @@ class AdminController extends Controller
             'message' => 'Point rule created',
             'data' => $rule,
         ], 201);
+    }
+
+    public function users(): JsonResponse
+    {
+        $users = User::query()->with('role')->paginate(20);
+        return response()->json($users);
+    }
+
+    public function updateUserRole(Request $request, int $userId): JsonResponse
+    {
+        $validated = $request->validate([
+            'role_id' => ['required', 'integer', 'exists:roles,id'],
+            'is_active' => ['nullable', 'boolean'],
+        ]);
+
+        $user = User::query()->find($userId);
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        $user->update([
+            'role_id' => $validated['role_id'],
+            'is_active' => $validated['is_active'] ?? $user->is_active,
+        ]);
+
+        return response()->json([
+            'message' => 'User role updated',
+            'data' => $user->fresh('role'),
+        ]);
+    }
+
+    public function complaints(): JsonResponse
+    {
+        $complaints = Complaint::query()
+            ->with(['citizen', 'request'])
+            ->orderByRaw("FIELD(status, 'pending') DESC")
+            ->orderByDesc('created_at')
+            ->paginate(15);
+
+        return response()->json($complaints);
+    }
+
+    public function resolveComplaint(Request $request, int $complaintId): JsonResponse
+    {
+        $validated = $request->validate([
+            'resolution_notes' => ['required', 'string'],
+        ]);
+
+        $complaint = Complaint::query()->find($complaintId);
+        if (!$complaint) {
+            return response()->json(['message' => 'Complaint not found'], 404);
+        }
+
+        $complaint->update([
+            'status' => 'resolved',
+            'resolution_notes' => $validated['resolution_notes'],
+            'resolved_at' => now(),
+            'resolved_by' => $request->user()->id,
+        ]);
+
+        Notification::query()->create([
+            'user_id' => $complaint->citizen_id,
+            'title' => 'Complaint Resolved',
+            'body' => 'Your complaint regarding request #'.$complaint->request_id.' has been resolved. Note: '.$validated['resolution_notes'],
+            'type' => 'system',
+            'ref_id' => $complaint->id,
+            'is_read' => false,
+            'created_at' => now(),
+        ]);
+
+        return response()->json([
+            'message' => 'Complaint resolved',
+            'data' => $complaint,
+        ]);
     }
 }
