@@ -40,27 +40,28 @@ class EnterpriseController extends Controller
             return response()->json(['message' => 'Enterprise profile not found'], 422);
         }
 
-        // Include priority calculation logic
-        // Simplified: using created_at, but we could add a DB calculated 'priority_score'
+        // Priority logic: High weight first, then oldest first
         $requests = WasteRequest::query()
+            ->with(['images', 'wasteType'])
             ->where('status', 'pending')
             ->where('is_deleted', false)
-            // Optional: filter by service areas
             ->whereIn('ward_id', function ($query) use ($enterprise) {
                 $query->select('ward_id')
                     ->from('enterprise_service_areas')
                     ->where('enterprise_id', $enterprise->id);
             })
-            // Simple priority: oldest requests have higher priority (ascending)
-            ->orderBy('created_at', 'asc')
+            ->orderByDesc('estimated_weight_kg') // High volume first
+            ->orderBy('created_at', 'asc')       // Then oldest first
             ->paginate(10);
 
         // Append a priority label for the frontend to use
         $requests->getCollection()->transform(function ($req) {
             $daysPending = $req->created_at->diffInDays(now());
-            if ($daysPending > 3) {
+            $weight = $req->estimated_weight_kg ?? 0;
+            
+            if ($weight >= 50 || $daysPending >= 3) {
                 $req->priority_label = 'High';
-            } elseif ($daysPending > 1) {
+            } elseif ($weight >= 10 || $daysPending >= 1) {
                 $req->priority_label = 'Medium';
             } else {
                 $req->priority_label = 'Low';

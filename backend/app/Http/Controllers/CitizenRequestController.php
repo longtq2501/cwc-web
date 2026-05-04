@@ -58,9 +58,9 @@ class CitizenRequestController extends Controller
             'description' => ['nullable', 'string'],
             'estimated_weight_kg' => ['nullable', 'numeric', 'min:0'],
             'image_urls' => ['nullable', 'array', 'min:1'],
-            'image_urls.*' => ['required', 'url', 'max:500'],
+            'image_urls.*' => ['required', 'string', 'max:500'],
             'images' => ['nullable', 'array', 'min:1'],
-            'images.*' => ['required', 'url', 'max:500'],
+            'images.*' => ['required', 'string', 'max:500'],
         ]);
 
         $imageUrls = $validated['image_urls'] ?? $validated['images'] ?? [];
@@ -287,7 +287,7 @@ class CitizenRequestController extends Controller
         ]);
 
         $file = $request->file('image');
-        $path = $file->store('public/requests');
+        $path = $file->store('requests', 'public');
         $url = Storage::url($path);
 
         // Mock external AI classification
@@ -301,7 +301,7 @@ class CitizenRequestController extends Controller
                 'predicted_type_name' => $predictedType->name,
                 'waste_type_id' => $predictedType->id,
                 'confidence' => rand(75, 99) / 100, // e.g., 0.85
-                'image_url' => url($url),
+                'image_url' => $url,
             ],
         ]);
     }

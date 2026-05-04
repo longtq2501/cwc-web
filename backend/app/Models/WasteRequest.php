@@ -54,4 +54,9 @@ class WasteRequest extends Model
     {
         return $this->hasMany(RequestImage::class, 'request_id');
     }
+
+    public function wasteType(): BelongsTo
+    {
+        return $this->belongsTo(WasteType::class, 'waste_type_id');
+    }
 }
