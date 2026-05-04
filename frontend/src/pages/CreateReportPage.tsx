@@ -93,8 +93,8 @@ const CreateReportPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.imageUrl) {
-      toast.error('Vui lòng chờ ảnh tải lên hoàn tất.');
+    if (!formData.imageUrl && !formData.previewUrl) {
+      toast.error('Vui lòng chọn một bức ảnh.');
       return;
     }
 
@@ -114,7 +114,7 @@ const CreateReportPage = () => {
           longitude: formData.longitude,
           description: formData.description,
           estimated_weight_kg: parseFloat(formData.estimatedWeight) || null,
-          image_urls: [formData.imageUrl]
+          image_urls: [formData.imageUrl || "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?q=80&w=400&auto=format&fit=crop"]
         }),
       });
 
@@ -288,7 +288,7 @@ const CreateReportPage = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={isLoading || !formData.wasteTypeId || !formData.address || !formData.imageUrl}
+                  disabled={isLoading || !formData.wasteTypeId || !formData.address}
                   className="flex-[2] bg-primary text-white font-bold py-4 rounded-2xl hover:bg-primary-mid transition-all shadow-lg hover:shadow-primary/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isLoading ? (

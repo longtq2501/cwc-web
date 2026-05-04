@@ -134,6 +134,43 @@ const ReportHistoryPage = () => {
     filter === 'ALL' ? true : r.status === filter.toLowerCase()
   );
 
+  const [complaintContent, setComplaintContent] = useState('');
+  const [isSubmittingComplaint, setIsSubmittingComplaint] = useState(false);
+
+  const submitComplaint = async () => {
+    if (!complaintContent.trim()) {
+      toast.error('Vui lòng nhập nội dung');
+      return;
+    }
+    setIsSubmittingComplaint(true);
+    try {
+      const res = await fetch(`/api/citizen/requests/${complaintReport.id}/complain`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          complaint_type: 'complaint',
+          content: complaintContent
+        })
+      });
+
+      if (res.ok) {
+        toast.success('Đã gửi khiếu nại thành công');
+        setComplaintReport(null);
+        setComplaintContent('');
+      } else {
+        const data = await res.json();
+        toast.error(data.message || 'Lỗi khi gửi khiếu nại');
+      }
+    } catch (e) {
+      toast.error('Lỗi kết nối máy chủ');
+    } finally {
+      setIsSubmittingComplaint(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -185,18 +222,29 @@ const ReportHistoryPage = () => {
         </>
       )}
 
-      {/* Complaint Modal (UI Mock for now as backend doesn't have create-feedback yet) */}
+      {/* Complaint Modal */}
       <AnimatePresence>
         {complaintReport && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-3xl w-full max-w-md p-8">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-bold text-gray-900">Gửi khiếu nại</h3>
-                <button onClick={() => setComplaintReport(null)} className="text-gray-400"><X /></button>
+                <button onClick={() => setComplaintReport(null)} className="text-gray-400 hover:text-gray-900"><X /></button>
               </div>
-              <textarea className="w-full px-4 py-3 rounded-2xl border mb-6" placeholder="Nhập nội dung khiếu nại..." />
-              <button onClick={() => { toast.success('Đã gửi khiếu nại'); setComplaintReport(null); }} className="w-full bg-red-500 text-white font-bold py-4 rounded-2xl">
-                Gửi khiếu nại
+              <p className="text-sm text-gray-500 mb-4">Bạn đang khiếu nại về yêu cầu thu gom #{complaintReport.id}</p>
+              <textarea 
+                className="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:ring-primary focus:border-primary mb-6 text-sm" 
+                placeholder="Nhập nội dung khiếu nại chi tiết..." 
+                rows={4}
+                value={complaintContent}
+                onChange={(e) => setComplaintContent(e.target.value)}
+              />
+              <button 
+                onClick={submitComplaint} 
+                disabled={isSubmittingComplaint}
+                className="w-full bg-red-500 text-white font-bold py-4 rounded-2xl hover:bg-red-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isSubmittingComplaint ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Gửi khiếu nại'}
               </button>
             </motion.div>
           </div>

@@ -42,7 +42,7 @@ const RegisterPage = () => {
     try {
       await register(formData.email, formData.password, formData.fullName, formData.role);
       toast.success('Đăng ký tài khoản thành công!');
-      navigate('/'); // Redirect to dashboard redirector
+      navigate('/dashboard'); 
     } catch (err: any) {
       setError(err.message || 'Đăng ký thất bại. Vui lòng thử lại.');
       toast.error(err.message || 'Lỗi đăng ký');

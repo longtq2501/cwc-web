@@ -31,8 +31,7 @@ const LoginPage = () => {
       
       // Redirect logic is usually handled in useEffect or AuthContext, 
       // but we can also do it here for immediate feedback.
-      // The app will redirect via ProtectedRoute anyway if we go to '/'
-      navigate('/'); 
+      navigate('/dashboard'); 
     } catch (err: any) {
       setError(err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
       toast.error('Thông tin đăng nhập không chính xác');

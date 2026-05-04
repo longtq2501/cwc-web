@@ -26,6 +26,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('/requests', [CitizenRequestController::class, 'store']);
         Route::post('/requests/{requestId}/cancel', [CitizenRequestController::class, 'cancel']);
         Route::post('/requests/{requestId}/confirm', [CitizenRequestController::class, 'confirmCollected']);
+        Route::post('/requests/{requestId}/complain', [CitizenRequestController::class, 'complain']);
         Route::get('/points/history', [CitizenRequestController::class, 'pointHistory']);
         Route::get('/leaderboard', [CitizenRequestController::class, 'leaderboard']);
         Route::post('/analyze-image', [CitizenRequestController::class, 'analyzeImage']);

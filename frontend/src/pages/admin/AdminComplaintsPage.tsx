@@ -10,20 +10,48 @@ const AdminComplaintsPage: React.FC = () => {
   const [complaints, setComplaints] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Simulated fetch for complaints
-    setTimeout(() => {
-      setComplaints([
-        { id: 1, type: 'dispute', title: 'Sai lệch khối lượng', body: 'Collector báo 5kg nhưng tôi cân chỉ 3kg.', user: 'Lê Văn A', status: 'pending' },
-        { id: 2, type: 'complaint', title: 'Thu gom trễ', body: 'Quá 2 tiếng so với thời gian hẹn.', user: 'Trần Thị B', status: 'pending' },
-      ]);
+  const fetchComplaints = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/complaints', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        // Assuming Laravel pagination returns .data or direct array
+        setComplaints(data.data || data);
+      }
+    } catch (e) {
+      toast.error('Lỗi khi tải danh sách khiếu nại');
+    } finally {
       setLoading(false);
-    }, 500);
+    }
+  };
+
+  useEffect(() => {
+    fetchComplaints();
   }, []);
 
-  const handleResolve = (id: number) => {
-    toast.success('Đã giải quyết khiếu nại!');
-    setComplaints(complaints.filter(c => c.id !== id));
+  const handleResolve = async (id: number) => {
+    try {
+      const res = await fetch(`/api/admin/complaints/${id}/resolve`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ resolution_notes: 'Đã xử lý xong khiếu nại' })
+      });
+      if (res.ok) {
+        toast.success('Đã giải quyết khiếu nại!');
+        // Filter out the resolved complaint or refetch
+        setComplaints(complaints.filter(c => c.id !== id));
+      } else {
+        toast.error('Lỗi khi giải quyết khiếu nại');
+      }
+    } catch (e) {
+      toast.error('Lỗi kết nối máy chủ');
+    }
   };
 
   if (loading) return <div className="flex justify-center p-12">Đang tải khiếu nại...</div>;
@@ -46,22 +74,30 @@ const AdminComplaintsPage: React.FC = () => {
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <span className="px-2 py-0.5 bg-red-100 text-red-600 text-[10px] font-bold uppercase rounded">
-                      {comp.type}
+                      {comp.complaint_type || 'Khác'}
                     </span>
-                    <h3 className="font-bold text-gray-900">{comp.title}</h3>
+                    <h3 className="font-bold text-gray-900">Yêu cầu thu gom #{comp.request_id}</h3>
                   </div>
-                  <p className="text-sm text-gray-600 mb-2">{comp.body}</p>
-                  <p className="text-xs text-gray-400">Người gửi: {comp.user} · 10 phút trước</p>
+                  <p className="text-sm text-gray-600 mb-2">{comp.content}</p>
+                  <p className="text-xs text-gray-400">Người gửi: {comp.citizen?.full_name || 'Khách'} · {new Date(comp.created_at).toLocaleString('vi-VN')}</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
-                <Button variant="outline" size="sm">
-                  <MessageSquare className="w-4 h-4 mr-2" /> Liên hệ
-                </Button>
-                <Button variant="primary" size="sm" onClick={() => handleResolve(comp.id)}>
-                  <CheckCircle className="w-4 h-4 mr-2" /> Giải quyết
-                </Button>
+                {comp.status === 'pending' ? (
+                  <>
+                    <Button variant="outline" size="sm">
+                      <MessageSquare className="w-4 h-4 mr-2" /> Liên hệ
+                    </Button>
+                    <Button variant="primary" size="sm" onClick={() => handleResolve(comp.id)}>
+                      <CheckCircle className="w-4 h-4 mr-2" /> Giải quyết
+                    </Button>
+                  </>
+                ) : (
+                  <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold flex items-center gap-1">
+                    <CheckCircle className="w-4 h-4" /> Đã xử lý
+                  </span>
+                )}
               </div>
             </div>
           </Card>

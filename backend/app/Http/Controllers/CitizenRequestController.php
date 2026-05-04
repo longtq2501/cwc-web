@@ -144,6 +144,60 @@ class CitizenRequestController extends Controller
         ]);
     }
 
+    public function complain(Request $request, int $requestId): JsonResponse
+    {
+        $validated = $request->validate([
+            'complaint_type' => ['required', 'string', 'in:complaint,compliment,suggestion'],
+            'content' => ['required', 'string', 'max:1000'],
+        ]);
+
+        $wasteRequest = WasteRequest::query()
+            ->where('id', $requestId)
+            ->where('citizen_id', $request->user()->id)
+            ->where('is_deleted', false)
+            ->first();
+
+        if (!$wasteRequest) {
+            return response()->json(['message' => 'Request not found'], 404);
+        }
+
+        // Must be collected or confirmed or pending (maybe they complain about delay)
+        // Let's allow complaints on any non-cancelled request
+        if ($wasteRequest->status === 'cancelled') {
+            return response()->json([
+                'message' => 'Cannot complain about a cancelled request.',
+            ], 422);
+        }
+
+        // Check if a complaint already exists
+        $existing = \App\Models\Complaint::query()
+            ->where('citizen_id', $request->user()->id)
+            ->where('request_id', $requestId)
+            ->where('is_deleted', false)
+            ->first();
+
+        if ($existing) {
+            return response()->json([
+                'message' => 'You have already submitted a complaint for this request.',
+            ], 422);
+        }
+
+        $complaint = \App\Models\Complaint::query()->create([
+            'citizen_id' => $request->user()->id,
+            'request_id' => $requestId,
+            'assignment_id' => null, // Can be resolved later by admin based on request
+            'complaint_type' => $validated['complaint_type'],
+            'content' => $validated['content'],
+            'status' => 'pending',
+            'is_deleted' => false,
+        ]);
+
+        return response()->json([
+            'message' => 'Complaint submitted successfully',
+            'data' => $complaint,
+        ], 201);
+    }
+
     public function confirmCollected(Request $request, int $requestId): JsonResponse
     {
         $wasteRequest = WasteRequest::query()
