@@ -1,8 +1,5 @@
 # Danh sách Task (Frontend & Backend)
 
-Dự án được phân chia rõ ràng theo 2 mảng: **Frontend (TypeScript)** và **Backend (PHP)**. Mỗi task được chia nhỏ theo từng trang (Page/Section) hoặc nhóm API để dễ dàng phân công cho các thành viên.
-
----
 
 ## 1. FRONTEND TASKS (TypeScript)
 

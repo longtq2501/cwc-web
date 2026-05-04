@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\CitizenReportController;
+use App\Http\Controllers\CitizenRequestController;
 use App\Http\Controllers\CollectorController;
 use App\Http\Controllers\EnterpriseController;
 use App\Http\Controllers\NotificationController;
@@ -21,21 +21,21 @@ Route::prefix('auth')->group(function (): void {
 
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::prefix('citizen')->middleware('role:citizen')->group(function (): void {
-        Route::get('/reports', [CitizenReportController::class, 'index']);
-        Route::get('/reports/{reportId}', [CitizenReportController::class, 'show']);
-        Route::post('/reports', [CitizenReportController::class, 'store']);
-        Route::post('/reports/{reportId}/cancel', [CitizenReportController::class, 'cancel']);
-        Route::post('/reports/{reportId}/confirm', [CitizenReportController::class, 'confirmCollected']);
-        Route::get('/points/history', [CitizenReportController::class, 'pointHistory']);
-        Route::get('/leaderboard', [CitizenReportController::class, 'leaderboard']);
+        Route::get('/requests', [CitizenRequestController::class, 'index']);
+        Route::get('/requests/{requestId}', [CitizenRequestController::class, 'show']);
+        Route::post('/requests', [CitizenRequestController::class, 'store']);
+        Route::post('/requests/{requestId}/cancel', [CitizenRequestController::class, 'cancel']);
+        Route::post('/requests/{requestId}/confirm', [CitizenRequestController::class, 'confirmCollected']);
+        Route::get('/points/history', [CitizenRequestController::class, 'pointHistory']);
+        Route::get('/leaderboard', [CitizenRequestController::class, 'leaderboard']);
     });
 
     Route::prefix('enterprise')->middleware('role:enterprise')->group(function (): void {
         Route::get('/collectors', [EnterpriseController::class, 'collectors']);
-        Route::get('/reports/pending', [EnterpriseController::class, 'pendingReports']);
-        Route::post('/reports/{reportId}/accept', [EnterpriseController::class, 'acceptReport']);
-        Route::post('/reports/{reportId}/reject', [EnterpriseController::class, 'rejectReport']);
-        Route::post('/reports/{reportId}/assign', [EnterpriseController::class, 'assignCollector']);
+        Route::get('/requests/pending', [EnterpriseController::class, 'pendingRequests']);
+        Route::post('/requests/{requestId}/accept', [EnterpriseController::class, 'acceptRequest']);
+        Route::post('/requests/{requestId}/reject', [EnterpriseController::class, 'rejectRequest']);
+        Route::post('/requests/{requestId}/assign', [EnterpriseController::class, 'assignCollector']);
         Route::get('/assignments', [EnterpriseController::class, 'assignments']);
     });
 

@@ -20,7 +20,7 @@ class Leaderboard extends Model
         'period_month',
         'period_points',
         'period_rank',
-        'total_reports',
+        'total_requests',
         'updated_at',
     ];
 }

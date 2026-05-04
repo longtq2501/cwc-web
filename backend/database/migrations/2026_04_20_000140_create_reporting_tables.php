@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('waste_reports', function (Blueprint $table) {
+        Schema::create('waste_requests', function (Blueprint $table) {
             $table->id();
             $table->foreignId('citizen_id');
             $table->unsignedTinyInteger('waste_type_id');
@@ -36,23 +36,23 @@ return new class extends Migration
             $table->foreign('ward_id')->references('id')->on('wards');
             $table->foreign('ai_suggested_type')->references('id')->on('waste_types');
 
-            $table->index(['ward_id', 'status'], 'idx_report_ward_status');
-            $table->index(['citizen_id', 'created_at'], 'idx_report_citizen');
+            $table->index(['ward_id', 'status'], 'idx_request_ward_status');
+            $table->index(['citizen_id', 'created_at'], 'idx_request_citizen');
         });
 
-        Schema::create('report_images', function (Blueprint $table) {
+        Schema::create('request_images', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('report_id');
+            $table->foreignId('request_id');
             $table->string('image_url', 500);
             $table->boolean('is_primary')->default(false);
             $table->timestamp('uploaded_at')->useCurrent();
 
-            $table->foreign('report_id')->references('id')->on('waste_reports')->cascadeOnDelete();
+            $table->foreign('request_id')->references('id')->on('waste_requests')->cascadeOnDelete();
         });
 
         Schema::create('collection_assignments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('report_id')->unique();
+            $table->foreignId('request_id')->unique();
             $table->foreignId('enterprise_id');
             $table->foreignId('collector_id')->nullable();
             $table->enum('status', ['accepted', 'assigned', 'on_the_way', 'collected', 'failed'])->default('accepted');
@@ -66,7 +66,7 @@ return new class extends Migration
             $table->string('failed_reason', 500)->nullable();
             $table->timestamps();
 
-            $table->foreign('report_id')->references('id')->on('waste_reports');
+            $table->foreign('request_id')->references('id')->on('waste_requests');
             $table->foreign('enterprise_id')->references('id')->on('recycling_enterprises');
             $table->foreign('collector_id')->references('id')->on('collectors');
 
@@ -80,7 +80,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('collection_assignments');
-        Schema::dropIfExists('report_images');
-        Schema::dropIfExists('waste_reports');
+        Schema::dropIfExists('request_images');
+        Schema::dropIfExists('waste_requests');
     }
 };

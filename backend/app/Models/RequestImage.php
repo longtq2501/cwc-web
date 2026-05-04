@@ -6,14 +6,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class ReportImage extends Model
+class RequestImage extends Model
 {
     use HasFactory;
+
+    protected $table = 'request_images';
 
     public $timestamps = false;
 
     protected $fillable = [
-        'report_id',
+        'request_id',
         'image_url',
         'is_primary',
         'uploaded_at',
@@ -27,8 +29,8 @@ class ReportImage extends Model
         ];
     }
 
-    public function report(): BelongsTo
+    public function request(): BelongsTo
     {
-        return $this->belongsTo(WasteReport::class, 'report_id');
+        return $this->belongsTo(WasteRequest::class, 'request_id');
     }
 }

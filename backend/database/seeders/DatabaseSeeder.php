@@ -22,6 +22,8 @@ class DatabaseSeeder extends Seeder
             CitizenUserSeeder::class,
             EnterpriseCollectorSeeder::class,
             PointRulesSeeder::class,
+            WasteRequestSeeder::class,
+            ComplaintSeeder::class,
         ]);
     }
 }

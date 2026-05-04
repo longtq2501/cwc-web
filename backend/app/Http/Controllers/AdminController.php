@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Notification;
 use App\Models\PointRule;
 use App\Models\RecyclingEnterprise;
-use App\Models\WasteReport;
+use App\Models\WasteRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -15,8 +15,8 @@ class AdminController extends Controller
     {
         return response()->json([
             'data' => [
-                'total_reports' => WasteReport::query()->count(),
-                'pending_reports' => WasteReport::query()->where('status', 'pending')->count(),
+                'total_requests' => WasteRequest::query()->count(),
+                'pending_requests' => WasteRequest::query()->where('status', 'pending')->count(),
                 'total_enterprises' => RecyclingEnterprise::query()->count(),
                 'pending_enterprises' => RecyclingEnterprise::query()->where('status', 'pending')->count(),
             ],
@@ -112,7 +112,7 @@ class AdminController extends Controller
             'waste_type_id' => ['nullable', 'integer', 'exists:waste_types,id'],
             'rule_name' => ['required', 'string', 'max:200'],
             'description' => ['nullable', 'string', 'max:500'],
-            'condition_type' => ['required', 'in:valid_report,correct_classification,fast_collection,first_report_of_day,other'],
+            'condition_type' => ['required', 'in:valid_request,correct_classification,fast_collection,first_request_of_day,other'],
             'points' => ['required', 'integer'],
             'effective_from' => ['required', 'date'],
             'effective_to' => ['nullable', 'date', 'after_or_equal:effective_from'],

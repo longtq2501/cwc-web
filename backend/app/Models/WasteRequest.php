@@ -7,9 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class WasteReport extends Model
+class WasteRequest extends Model
 {
     use HasFactory;
+
+    protected $table = 'waste_requests';
 
     protected $fillable = [
         'citizen_id',
@@ -50,6 +52,6 @@ class WasteReport extends Model
 
     public function images(): HasMany
     {
-        return $this->hasMany(ReportImage::class, 'report_id');
+        return $this->hasMany(RequestImage::class, 'request_id');
     }
 }

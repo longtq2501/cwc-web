@@ -20,7 +20,7 @@ class CollectorController extends Controller
         }
 
         $tasks = CollectionAssignment::query()
-            ->with('report')
+            ->with('request')
             ->where('collector_id', $collector->id)
             ->orderByDesc('created_at')
             ->paginate(10);
@@ -52,16 +52,16 @@ class CollectorController extends Controller
                 'started_at' => now(),
             ]);
 
-            $report = $assignment->report;
-            $report?->update(['status' => 'on_the_way']);
+            $wasteRequest = $assignment->request;
+            $wasteRequest?->update(['status' => 'on_the_way']);
 
-            if ($report) {
+            if ($wasteRequest) {
                 $this->notifyUser(
-                    $report->citizen_id,
+                    $wasteRequest->citizen_id,
                     'Collector is on the way',
-                    'Collector started moving to your report #'.$report->id.'.',
+                    'Collector started moving to your request #'.$wasteRequest->id.'.',
                     'report_status',
-                    $report->id
+                    $wasteRequest->id
                 );
             }
         });
@@ -105,16 +105,16 @@ class CollectorController extends Controller
                 'collector_note' => $validated['collector_note'] ?? null,
             ]);
 
-            $report = $assignment->report;
-            $report?->update(['status' => 'collected']);
+            $wasteRequest = $assignment->request;
+            $wasteRequest?->update(['status' => 'collected']);
 
-            if ($report) {
+            if ($wasteRequest) {
                 $this->notifyUser(
-                    $report->citizen_id,
+                    $wasteRequest->citizen_id,
                     'Waste collected',
-                    'Your report #'.$report->id.' has been marked collected. Please confirm when ready.',
+                    'Your request #'.$wasteRequest->id.' has been marked collected. Please confirm when ready.',
                     'report_status',
-                    $report->id
+                    $wasteRequest->id
                 );
             }
         });

@@ -11,7 +11,7 @@ class CollectionAssignment extends Model
     use HasFactory;
 
     protected $fillable = [
-        'report_id',
+        'request_id',
         'enterprise_id',
         'collector_id',
         'status',
@@ -36,9 +36,9 @@ class CollectionAssignment extends Model
         ];
     }
 
-    public function report(): BelongsTo
+    public function request(): BelongsTo
     {
-        return $this->belongsTo(WasteReport::class, 'report_id');
+        return $this->belongsTo(WasteRequest::class, 'request_id');
     }
 
     public function enterprise(): BelongsTo

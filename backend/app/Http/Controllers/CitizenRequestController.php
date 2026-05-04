@@ -6,42 +6,42 @@ use App\Models\Leaderboard;
 use App\Models\Notification;
 use App\Models\PointRule;
 use App\Models\PointTransaction;
-use App\Models\ReportImage;
-use App\Models\WasteReport;
+use App\Models\RequestImage;
+use App\Models\WasteRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class CitizenReportController extends Controller
+class CitizenRequestController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $reports = WasteReport::query()
+        $requests = WasteRequest::query()
             ->with('images')
             ->where('citizen_id', $request->user()->id)
             ->where('is_deleted', false)
             ->orderByDesc('created_at')
             ->paginate(10);
 
-        return response()->json($reports);
+        return response()->json($requests);
     }
 
-    public function show(Request $request, int $reportId): JsonResponse
+    public function show(Request $request, int $requestId): JsonResponse
     {
-        $report = WasteReport::query()
+        $wasteRequest = WasteRequest::query()
             ->with('images')
-            ->where('id', $reportId)
+            ->where('id', $requestId)
             ->where('citizen_id', $request->user()->id)
             ->where('is_deleted', false)
             ->first();
 
-        if (!$report) {
-            return response()->json(['message' => 'Report not found'], 404);
+        if (!$wasteRequest) {
+            return response()->json(['message' => 'Request not found'], 404);
         }
 
         return response()->json([
-            'report' => $report,
-            'data' => $report,
+            'request' => $wasteRequest,
+            'data' => $wasteRequest,
         ]);
     }
 
@@ -70,20 +70,20 @@ class CitizenReportController extends Controller
 
         $citizenId = $request->user()->id;
 
-        $dailyReportCount = WasteReport::query()
+        $dailyRequestCount = WasteRequest::query()
             ->where('citizen_id', $citizenId)
             ->whereDate('created_at', now()->toDateString())
             ->where('is_deleted', false)
             ->count();
 
-        if ($dailyReportCount >= 10) {
+        if ($dailyRequestCount >= 10) {
             return response()->json([
-                'message' => 'Daily limit reached: maximum 10 reports per day.',
+                'message' => 'Daily limit reached: maximum 10 requests per day.',
             ], 422);
         }
 
-        $report = DB::transaction(function () use ($validated, $citizenId, $imageUrls) {
-            $report = WasteReport::query()->create([
+        $wasteRequest = DB::transaction(function () use ($validated, $citizenId, $imageUrls) {
+            $wasteRequest = WasteRequest::query()->create([
                 'citizen_id' => $citizenId,
                 'waste_type_id' => $validated['waste_type_id'],
                 'ward_id' => $validated['ward_id'],
@@ -97,94 +97,94 @@ class CitizenReportController extends Controller
             ]);
 
             foreach ($imageUrls as $index => $url) {
-                ReportImage::query()->create([
-                    'report_id' => $report->id,
+                RequestImage::query()->create([
+                    'request_id' => $wasteRequest->id,
                     'image_url' => $url,
                     'is_primary' => $index === 0,
                     'uploaded_at' => now(),
                 ]);
             }
 
-            return $report->load('images');
+            return $wasteRequest->load('images');
         });
 
         return response()->json([
-            'message' => 'Report created successfully',
-            'report' => $report,
-            'data' => $report,
+            'message' => 'Request created successfully',
+            'request' => $wasteRequest,
+            'data' => $wasteRequest,
         ], 201);
     }
 
-    public function cancel(Request $request, int $reportId): JsonResponse
+    public function cancel(Request $request, int $requestId): JsonResponse
     {
-        $report = WasteReport::query()
-            ->where('id', $reportId)
+        $wasteRequest = WasteRequest::query()
+            ->where('id', $requestId)
             ->where('citizen_id', $request->user()->id)
             ->where('is_deleted', false)
             ->first();
 
-        if (!$report) {
-            return response()->json(['message' => 'Report not found'], 404);
+        if (!$wasteRequest) {
+            return response()->json(['message' => 'Request not found'], 404);
         }
 
-        if ($report->status !== 'pending') {
+        if ($wasteRequest->status !== 'pending') {
             return response()->json([
-                'message' => 'Only pending reports can be cancelled.',
+                'message' => 'Only pending requests can be cancelled.',
             ], 422);
         }
 
-        $report->update(['status' => 'cancelled']);
+        $wasteRequest->update(['status' => 'cancelled']);
 
         return response()->json([
-            'message' => 'Report cancelled successfully',
-            'report' => $report,
-            'data' => $report,
+            'message' => 'Request cancelled successfully',
+            'request' => $wasteRequest,
+            'data' => $wasteRequest,
         ]);
     }
 
-    public function confirmCollected(Request $request, int $reportId): JsonResponse
+    public function confirmCollected(Request $request, int $requestId): JsonResponse
     {
-        $report = WasteReport::query()
-            ->where('id', $reportId)
+        $wasteRequest = WasteRequest::query()
+            ->where('id', $requestId)
             ->where('citizen_id', $request->user()->id)
             ->where('is_deleted', false)
             ->first();
 
-        if (!$report) {
-            return response()->json(['message' => 'Report not found'], 404);
+        if (!$wasteRequest) {
+            return response()->json(['message' => 'Request not found'], 404);
         }
 
-        if ($report->status !== 'collected') {
+        if ($wasteRequest->status !== 'collected') {
             return response()->json([
-                'message' => 'Only collected reports can be confirmed.',
+                'message' => 'Only collected requests can be confirmed.',
             ], 422);
         }
 
-        $result = DB::transaction(function () use ($report, $request) {
-            $report->update(['status' => 'confirmed']);
+        $result = DB::transaction(function () use ($wasteRequest, $request) {
+            $wasteRequest->update(['status' => 'confirmed']);
 
-            $pointResult = $this->applyPointsForConfirmedReport($report);
+            $pointResult = $this->applyPointsForConfirmedRequest($wasteRequest);
 
             if (($pointResult['awarded_points'] ?? 0) > 0) {
                 $this->notifyUser(
                     $request->user()->id,
                     'Points earned',
-                    'You earned '.$pointResult['awarded_points'].' points for confirmed report #'.$report->id.'.',
+                    'You earned '.$pointResult['awarded_points'].' points for confirmed request #'.$wasteRequest->id.'.',
                     'point_earned',
-                    $report->id
+                    $wasteRequest->id
                 );
             }
 
             return [
-                'report' => $report->fresh(),
+                'request' => $wasteRequest->fresh(),
                 'point_summary' => $pointResult,
             ];
         });
 
         return response()->json([
-            'message' => 'Report confirmed successfully',
-            'report' => $result['report'],
-            'data' => $result['report'],
+            'message' => 'Request confirmed successfully',
+            'request' => $result['request'],
+            'data' => $result['request'],
             'point_summary' => $result['point_summary'],
         ]);
     }
@@ -224,7 +224,7 @@ class CitizenReportController extends Controller
         ]);
     }
 
-    private function applyPointsForConfirmedReport(WasteReport $report): array
+    private function applyPointsForConfirmedRequest(WasteRequest $wasteRequest): array
     {
         $today = now()->toDateString();
 
@@ -238,7 +238,7 @@ class CitizenReportController extends Controller
             ->get();
 
         $balance = (int) PointTransaction::query()
-            ->where('citizen_id', $report->citizen_id)
+            ->where('citizen_id', $wasteRequest->citizen_id)
             ->orderByDesc('id')
             ->value('balance_after');
 
@@ -246,7 +246,7 @@ class CitizenReportController extends Controller
         $appliedRules = [];
 
         foreach ($activeRules as $rule) {
-            if (!$this->ruleApplies($rule, $report)) {
+            if (!$this->ruleApplies($rule, $wasteRequest)) {
                 continue;
             }
 
@@ -262,8 +262,8 @@ class CitizenReportController extends Controller
             }
 
             PointTransaction::query()->create([
-                'citizen_id' => $report->citizen_id,
-                'report_id' => $report->id,
+                'citizen_id' => $wasteRequest->citizen_id,
+                'request_id' => $wasteRequest->id,
                 'rule_id' => $rule->id,
                 'points' => $delta,
                 'balance_after' => $newBalance,
@@ -280,11 +280,11 @@ class CitizenReportController extends Controller
             ];
         }
 
-        $report->update([
-            'points_awarded' => ($report->points_awarded ?? 0) + $awardedPoints,
+        $wasteRequest->update([
+            'points_awarded' => ($wasteRequest->points_awarded ?? 0) + $awardedPoints,
         ]);
 
-        $this->upsertLeaderboard($report, $awardedPoints);
+        $this->upsertLeaderboard($wasteRequest, $awardedPoints);
 
         return [
             'awarded_points' => $awardedPoints,
@@ -293,17 +293,17 @@ class CitizenReportController extends Controller
         ];
     }
 
-    private function ruleApplies(PointRule $rule, WasteReport $report): bool
+    private function ruleApplies(PointRule $rule, WasteRequest $wasteRequest): bool
     {
-        if ($rule->waste_type_id && (int) $rule->waste_type_id !== (int) $report->waste_type_id) {
+        if ($rule->waste_type_id && (int) $rule->waste_type_id !== (int) $wasteRequest->waste_type_id) {
             return false;
         }
 
         return match ($rule->condition_type) {
-            'valid_report' => $report->is_valid_report !== false,
-            'correct_classification' => $report->is_correct_type !== false,
-            'first_report_of_day' => PointTransaction::query()
-                ->where('citizen_id', $report->citizen_id)
+            'valid_request' => $wasteRequest->is_valid_report !== false,
+            'correct_classification' => $wasteRequest->is_correct_type !== false,
+            'first_request_of_day' => PointTransaction::query()
+                ->where('citizen_id', $wasteRequest->citizen_id)
                 ->whereDate('created_at', now()->toDateString())
                 ->doesntExist(),
             'fast_collection' => true,
@@ -311,22 +311,22 @@ class CitizenReportController extends Controller
         };
     }
 
-    private function upsertLeaderboard(WasteReport $report, int $awardedPoints): void
+    private function upsertLeaderboard(WasteRequest $wasteRequest, int $awardedPoints): void
     {
         $year = now()->year;
         $month = now()->month;
 
         $row = Leaderboard::query()->firstOrNew([
-            'citizen_id' => $report->citizen_id,
-            'ward_id' => $report->ward_id,
+            'citizen_id' => $wasteRequest->citizen_id,
+            'ward_id' => $wasteRequest->ward_id,
             'period_year' => $year,
             'period_month' => $month,
         ]);
 
         $row->total_points = ($row->total_points ?? 0) + $awardedPoints;
         $row->period_points = ($row->period_points ?? 0) + $awardedPoints;
-        $row->total_reports = WasteReport::query()
-            ->where('citizen_id', $report->citizen_id)
+        $row->total_requests = WasteRequest::query()
+            ->where('citizen_id', $wasteRequest->citizen_id)
             ->where('status', 'confirmed')
             ->where('is_deleted', false)
             ->count();

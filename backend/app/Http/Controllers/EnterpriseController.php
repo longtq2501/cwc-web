@@ -6,7 +6,7 @@ use App\Models\CollectionAssignment;
 use App\Models\Collector;
 use App\Models\Notification;
 use App\Models\RecyclingEnterprise;
-use App\Models\WasteReport;
+use App\Models\WasteRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -31,7 +31,7 @@ class EnterpriseController extends Controller
         ]);
     }
 
-    public function pendingReports(Request $request): JsonResponse
+    public function pendingRequests(Request $request): JsonResponse
     {
         $enterprise = RecyclingEnterprise::query()->where('user_id', $request->user()->id)->first();
 
@@ -39,16 +39,16 @@ class EnterpriseController extends Controller
             return response()->json(['message' => 'Enterprise profile not found'], 422);
         }
 
-        $reports = WasteReport::query()
+        $requests = WasteRequest::query()
             ->where('status', 'pending')
             ->where('is_deleted', false)
             ->orderBy('created_at')
             ->paginate(10);
 
-        return response()->json($reports);
+        return response()->json($requests);
     }
 
-    public function acceptReport(Request $request, int $reportId): JsonResponse
+    public function acceptRequest(Request $request, int $requestId): JsonResponse
     {
         $enterprise = RecyclingEnterprise::query()->where('user_id', $request->user()->id)->first();
 
@@ -56,28 +56,28 @@ class EnterpriseController extends Controller
             return response()->json(['message' => 'Enterprise profile not found'], 422);
         }
 
-        $report = WasteReport::query()->where('id', $reportId)->where('is_deleted', false)->first();
-        if (!$report) {
-            return response()->json(['message' => 'Report not found'], 404);
+        $wasteRequest = WasteRequest::query()->where('id', $requestId)->where('is_deleted', false)->first();
+        if (!$wasteRequest) {
+            return response()->json(['message' => 'Request not found'], 404);
         }
 
-        if ($report->status !== 'pending') {
-            return response()->json(['message' => 'Only pending reports can be accepted'], 422);
+        if ($wasteRequest->status !== 'pending') {
+            return response()->json(['message' => 'Only pending requests can be accepted'], 422);
         }
 
-        $assignment = DB::transaction(function () use ($report, $enterprise) {
-            $report->update(['status' => 'accepted']);
+        $assignment = DB::transaction(function () use ($wasteRequest, $enterprise) {
+            $wasteRequest->update(['status' => 'accepted']);
 
             $this->notifyUser(
-                $report->citizen_id,
-                'Report accepted',
-                'Your report #'.$report->id.' has been accepted by an enterprise.',
+                $wasteRequest->citizen_id,
+                'Request accepted',
+                'Your request #'.$wasteRequest->id.' has been accepted by an enterprise.',
                 'report_status',
-                $report->id
+                $wasteRequest->id
             );
 
             return CollectionAssignment::query()->create([
-                'report_id' => $report->id,
+                'request_id' => $wasteRequest->id,
                 'enterprise_id' => $enterprise->id,
                 'status' => 'accepted',
                 'accepted_at' => now(),
@@ -85,46 +85,46 @@ class EnterpriseController extends Controller
         });
 
         return response()->json([
-            'message' => 'Report accepted',
+            'message' => 'Request accepted',
             'assignment' => $assignment,
         ]);
     }
 
-    public function rejectReport(Request $request, int $reportId): JsonResponse
+    public function rejectRequest(Request $request, int $requestId): JsonResponse
     {
         $validated = $request->validate([
             'reason' => ['required', 'string', 'max:500'],
         ]);
 
-        $report = WasteReport::query()->where('id', $reportId)->where('is_deleted', false)->first();
-        if (!$report) {
-            return response()->json(['message' => 'Report not found'], 404);
+        $wasteRequest = WasteRequest::query()->where('id', $requestId)->where('is_deleted', false)->first();
+        if (!$wasteRequest) {
+            return response()->json(['message' => 'Request not found'], 404);
         }
 
-        if ($report->status !== 'pending') {
-            return response()->json(['message' => 'Only pending reports can be rejected'], 422);
+        if ($wasteRequest->status !== 'pending') {
+            return response()->json(['message' => 'Only pending requests can be rejected'], 422);
         }
 
-        $report->update([
+        $wasteRequest->update([
             'status' => 'rejected',
             'rejected_reason' => $validated['reason'],
         ]);
 
         $this->notifyUser(
-            $report->citizen_id,
-            'Report rejected',
-            'Your report #'.$report->id.' was rejected. Reason: '.$validated['reason'],
+            $wasteRequest->citizen_id,
+            'Request rejected',
+            'Your request #'.$wasteRequest->id.' was rejected. Reason: '.$validated['reason'],
             'report_status',
-            $report->id
+            $wasteRequest->id
         );
 
         return response()->json([
-            'message' => 'Report rejected',
-            'report' => $report,
+            'message' => 'Request rejected',
+            'request' => $wasteRequest,
         ]);
     }
 
-    public function assignCollector(Request $request, int $reportId): JsonResponse
+    public function assignCollector(Request $request, int $requestId): JsonResponse
     {
         $validated = $request->validate([
             'collector_id' => ['required', 'integer', 'exists:collectors,id'],
@@ -146,7 +146,7 @@ class EnterpriseController extends Controller
         }
 
         $assignment = CollectionAssignment::query()
-            ->where('report_id', $reportId)
+            ->where('request_id', $requestId)
             ->where('enterprise_id', $enterprise->id)
             ->first();
 
@@ -154,22 +154,22 @@ class EnterpriseController extends Controller
             return response()->json(['message' => 'Assignment not found'], 404);
         }
 
-        $report = WasteReport::query()->where('id', $reportId)->first();
+        $wasteRequest = WasteRequest::query()->where('id', $requestId)->first();
 
-        DB::transaction(function () use ($assignment, $collector, $report) {
+        DB::transaction(function () use ($assignment, $collector, $wasteRequest) {
             $assignment->update([
                 'collector_id' => $collector->id,
                 'status' => 'assigned',
                 'assigned_at' => now(),
             ]);
 
-            $report?->update(['status' => 'assigned']);
+            $wasteRequest?->update(['status' => 'assigned']);
 
-            if ($report) {
+            if ($wasteRequest) {
                 $this->notifyUser(
-                    $report->citizen_id,
+                    $wasteRequest->citizen_id,
                     'Collector assigned',
-                    'A collector has been assigned to your report #'.$report->id.'.',
+                    'A collector has been assigned to your request #'.$wasteRequest->id.'.',
                     'assignment',
                     $assignment->id
                 );
@@ -179,7 +179,7 @@ class EnterpriseController extends Controller
                 $this->notifyUser(
                     $collector->user_id,
                     'New collection task',
-                    'You were assigned to report #'.($report?->id ?? $assignment->report_id).'.',
+                    'You were assigned to request #'.($wasteRequest?->id ?? $assignment->request_id).'.',
                     'assignment',
                     $assignment->id
                 );
@@ -200,7 +200,7 @@ class EnterpriseController extends Controller
         }
 
         $assignments = CollectionAssignment::query()
-            ->with(['report', 'collector'])
+            ->with(['request', 'collector'])
             ->where('enterprise_id', $enterprise->id)
             ->orderByDesc('created_at')
             ->paginate(10);

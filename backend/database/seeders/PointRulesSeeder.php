@@ -19,7 +19,7 @@ class PointRulesSeeder extends Seeder
             [
                 'waste_type_id' => null,
                 'rule_name' => 'Bao cao hop le',
-                'condition_type' => 'valid_report',
+                'condition_type' => 'valid_request',
                 'points' => 10,
                 'is_active' => true,
                 'effective_from' => '2025-01-01',
@@ -55,7 +55,7 @@ class PointRulesSeeder extends Seeder
             [
                 'waste_type_id' => null,
                 'rule_name' => 'Bao cao dau tien trong ngay',
-                'condition_type' => 'first_report_of_day',
+                'condition_type' => 'first_request_of_day',
                 'points' => 3,
                 'is_active' => true,
                 'effective_from' => '2025-01-01',

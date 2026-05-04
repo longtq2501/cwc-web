@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('feedbacks', function (Blueprint $table) {
+        Schema::create('complaints', function (Blueprint $table) {
             $table->id();
             $table->foreignId('citizen_id');
-            $table->foreignId('report_id');
+            $table->foreignId('request_id');
             $table->foreignId('assignment_id')->nullable();
-            $table->enum('feedback_type', ['complaint', 'compliment', 'suggestion']);
+            $table->enum('complaint_type', ['complaint', 'compliment', 'suggestion']);
             $table->text('content');
             $table->enum('status', ['pending', 'processing', 'resolved', 'rejected'])->default('pending');
             $table->foreignId('resolved_by')->nullable();
@@ -26,7 +26,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('citizen_id')->references('id')->on('users');
-            $table->foreign('report_id')->references('id')->on('waste_reports');
+            $table->foreign('request_id')->references('id')->on('waste_requests');
             $table->foreign('assignment_id')->references('id')->on('collection_assignments');
             $table->foreign('resolved_by')->references('id')->on('users');
         });
@@ -52,6 +52,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('notifications');
-        Schema::dropIfExists('feedbacks');
+        Schema::dropIfExists('complaints');
     }
 };
