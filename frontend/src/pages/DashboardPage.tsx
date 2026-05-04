@@ -1,26 +1,10 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { 
-  FileText, TrendingUp, Users, Award, 
-  Clock, CheckCircle2, AlertCircle, ArrowUpRight 
+  FileText, Users, Award, 
+  Clock, ArrowUpRight, Recycle, AlertCircle 
 } from 'lucide-react';
-
-const StatCard = ({ icon: Icon, label, value, trend, color }: any) => (
-  <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-    <div className="flex justify-between items-start mb-4">
-      <div className={`p-3 rounded-2xl ${color}`}>
-        <Icon className="w-6 h-6 text-white" />
-      </div>
-      {trend && (
-        <span className="flex items-center text-green-500 text-xs font-bold">
-          <TrendingUp className="w-4 h-4 mr-1" /> {trend}
-        </span>
-      )}
-    </div>
-    <p className="text-gray-500 text-sm font-medium">{label}</p>
-    <p className="text-2xl font-display font-bold text-gray-900 mt-1">{value}</p>
-  </div>
-);
+import StatCard from '../components/ui/StatCard';
 
 const DashboardPage = () => {
   const { user } = useAuth();
@@ -28,7 +12,7 @@ const DashboardPage = () => {
   const citizenStats = [
     { icon: FileText, label: 'Tổng báo cáo', value: '12', trend: '+2 tuần này', color: 'bg-primary' },
     { icon: Award, label: 'Điểm EcoPoint', value: '1,240', trend: '+150', color: 'bg-yellow-500' },
-    { icon: CheckCircle2, label: 'Đã hoàn thành', value: '10', trend: '85%', color: 'bg-green-500' },
+    { icon: Recycle, label: 'Đã hoàn thành', value: '10', trend: '85%', color: 'bg-green-500' },
     { icon: Clock, label: 'Đang xử lý', value: '2', color: 'bg-blue-500' },
   ];
 
@@ -103,4 +87,3 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
-import { Recycle } from 'lucide-react';
