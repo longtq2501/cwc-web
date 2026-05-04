@@ -32,27 +32,37 @@ Route::middleware('auth:sanctum')->group(function (): void {
     });
 
     Route::prefix('enterprise')->middleware('role:enterprise')->group(function (): void {
+        Route::get('/profile', [EnterpriseController::class, 'profile']);
+        Route::put('/profile', [EnterpriseController::class, 'updateProfile']);
+        Route::get('/point-rules', [EnterpriseController::class, 'pointRules']);
+        Route::post('/point-rules', [EnterpriseController::class, 'createPointRule']);
         Route::get('/collectors', [EnterpriseController::class, 'collectors']);
         Route::get('/requests/pending', [EnterpriseController::class, 'pendingRequests']);
         Route::post('/requests/{requestId}/accept', [EnterpriseController::class, 'acceptRequest']);
         Route::post('/requests/{requestId}/reject', [EnterpriseController::class, 'rejectRequest']);
         Route::post('/requests/{requestId}/assign', [EnterpriseController::class, 'assignCollector']);
         Route::get('/assignments', [EnterpriseController::class, 'assignments']);
+        Route::get('/reports', [EnterpriseController::class, 'reports']);
     });
 
     Route::prefix('collector')->middleware('role:collector')->group(function (): void {
         Route::get('/tasks', [CollectorController::class, 'tasks']);
+        Route::get('/history', [CollectorController::class, 'history']);
         Route::post('/tasks/{assignmentId}/start', [CollectorController::class, 'startTask']);
         Route::post('/tasks/{assignmentId}/collect', [CollectorController::class, 'markCollected']);
     });
 
     Route::prefix('admin')->middleware('role:admin')->group(function (): void {
         Route::get('/overview', [AdminController::class, 'overview']);
+        Route::get('/users', [AdminController::class, 'users']);
+        Route::put('/users/{userId}/role', [AdminController::class, 'updateUserRole']);
         Route::get('/enterprises/pending', [AdminController::class, 'pendingEnterprises']);
         Route::post('/enterprises/{enterpriseId}/approve', [AdminController::class, 'approveEnterprise']);
         Route::post('/enterprises/{enterpriseId}/suspend', [AdminController::class, 'suspendEnterprise']);
         Route::get('/point-rules', [AdminController::class, 'pointRules']);
         Route::post('/point-rules', [AdminController::class, 'createPointRule']);
+        Route::get('/complaints', [AdminController::class, 'complaints']);
+        Route::post('/complaints/{complaintId}/resolve', [AdminController::class, 'resolveComplaint']);
     });
 
     Route::prefix('notifications')->group(function (): void {
