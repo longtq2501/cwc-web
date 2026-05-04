@@ -32,12 +32,17 @@ Route::middleware('auth:sanctum')->group(function (): void {
     });
 
     Route::prefix('enterprise')->middleware('role:enterprise')->group(function (): void {
+        Route::get('/profile', [EnterpriseController::class, 'profile']);
+        Route::put('/profile', [EnterpriseController::class, 'updateProfile']);
+        Route::get('/point-rules', [EnterpriseController::class, 'pointRules']);
+        Route::post('/point-rules', [EnterpriseController::class, 'createPointRule']);
         Route::get('/collectors', [EnterpriseController::class, 'collectors']);
         Route::get('/requests/pending', [EnterpriseController::class, 'pendingRequests']);
         Route::post('/requests/{requestId}/accept', [EnterpriseController::class, 'acceptRequest']);
         Route::post('/requests/{requestId}/reject', [EnterpriseController::class, 'rejectRequest']);
         Route::post('/requests/{requestId}/assign', [EnterpriseController::class, 'assignCollector']);
         Route::get('/assignments', [EnterpriseController::class, 'assignments']);
+        Route::get('/reports', [EnterpriseController::class, 'reports']);
     });
 
     Route::prefix('collector')->middleware('role:collector')->group(function (): void {
