@@ -1,14 +1,20 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { 
-  FileText, Users, Award, 
-  Clock, ArrowUpRight, Recycle, AlertCircle 
+  FileText, Award, 
+  Clock, ArrowUpRight, Recycle, AlertCircle, Truck, CheckCircle
 } from 'lucide-react';
 import StatCard from '../components/ui/StatCard';
+import EnterpriseDashboardPage from './enterprise/EnterpriseDashboardPage';
 
 const DashboardPage = () => {
   const { user } = useAuth();
 
+  if (user?.role === 'enterprise') {
+    return <EnterpriseDashboardPage />;
+  }
+
+  // Fallback to Citizen Dashboard (Default)
   const citizenStats = [
     { icon: FileText, label: 'Tổng báo cáo', value: '12', trend: '+2 tuần này', color: 'bg-primary' },
     { icon: Award, label: 'Điểm EcoPoint', value: '1,240', trend: '+150', color: 'bg-yellow-500' },
