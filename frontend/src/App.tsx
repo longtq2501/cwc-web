@@ -15,6 +15,11 @@ import RequestsDashboardPage from './pages/enterprise/RequestsDashboardPage';
 import AssignmentPage from './pages/enterprise/AssignmentPage';
 import ReportsPage from './pages/enterprise/ReportsPage';
 import EnterpriseProfilePage from './pages/enterprise/EnterpriseProfilePage';
+import CollectorTasksPage from './pages/collector/CollectorTasksPage';
+import CollectorHistoryPage from './pages/collector/CollectorHistoryPage';
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import AdminApprovalsPage from './pages/admin/AdminApprovalsPage';
+import AdminComplaintsPage from './pages/admin/AdminComplaintsPage';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -62,6 +67,14 @@ function AppRoutes() {
         <Route path="requests" element={<RequestsDashboardPage />} />
         <Route path="collectors" element={<AssignmentPage />} />
         <Route path="analytics" element={<ReportsPage />} />
+        
+        {/* Collector Routes */}
+        <Route path="history" element={<CollectorHistoryPage />} />
+
+        {/* Admin Routes */}
+        <Route path="approvals" element={<AdminApprovalsPage />} />
+        <Route path="users" element={<div className="p-8"><h1 className="text-2xl font-bold">Quản lý người dùng (Coming Soon)</h1></div>} />
+        <Route path="complaints" element={<AdminComplaintsPage />} />
         
         <Route path="settings" element={<EnterpriseProfilePage />} />
       </Route>

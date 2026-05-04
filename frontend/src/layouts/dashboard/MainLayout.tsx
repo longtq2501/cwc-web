@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { 
   Recycle, LayoutDashboard, FileText, BarChart3, 
   Users, Settings, LogOut, Menu, X, Bell, 
-  Search, User, Award, ShieldCheck, Truck
+  Search, User, Award, ShieldCheck, Truck, AlertTriangle
 } from 'lucide-react';
 
 const SidebarItem = ({ icon: Icon, label, path, active, onClick, className = '' }: any) => (
@@ -21,13 +21,20 @@ const SidebarItem = ({ icon: Icon, label, path, active, onClick, className = '' 
   </button>
 );
 
+interface MenuItem {
+  icon: React.ElementType;
+  label: string;
+  path: string;
+  primary?: boolean;
+}
+
 const MainLayout = () => {
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
 
-  const menuItems = {
+  const menuItems: Record<string, MenuItem[]> = {
     citizen: [
       { icon: LayoutDashboard, label: 'Tổng quan', path: '/dashboard' },
       { icon: Recycle, label: 'Tạo báo cáo', path: '/report/create', primary: true },
@@ -49,6 +56,7 @@ const MainLayout = () => {
       { icon: LayoutDashboard, label: 'Tổng quan', path: '/dashboard' },
       { icon: ShieldCheck, label: 'Duyệt Enterprise', path: '/approvals' },
       { icon: Users, label: 'Quản lý người dùng', path: '/users' },
+      { icon: AlertTriangle, label: 'Giải quyết khiếu nại', path: '/complaints' },
       { icon: Settings, label: 'Cấu hình hệ thống', path: '/settings' },
     ]
   };

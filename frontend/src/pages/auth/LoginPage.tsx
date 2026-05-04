@@ -117,6 +117,24 @@ const LoginPage = () => {
             >
               Đăng nhập ngay
             </Button>
+
+            {/* MOCK ADMIN LOGIN FOR UI TEST */}
+            <button
+              type="button"
+              onClick={() => {
+                localStorage.setItem('cwc_user', JSON.stringify({
+                  id: 'admin-mock-id', 
+                  email: 'admin@ecocollect.vn', 
+                  fullName: 'Admin Test UI', 
+                  role: 'admin'
+                }));
+                localStorage.setItem('cwc_token', 'mock-token-123');
+                window.location.href = '/dashboard';
+              }}
+              className="w-full py-2 border-2 border-dashed border-primary/30 text-primary/50 text-xs font-bold rounded-xl hover:bg-primary-pale transition-all"
+            >
+              🚀 DEBUG: Vào nhanh giao diện Admin (UI Test)
+            </button>
           </form>
 
           <div className="mt-10 pt-10 border-t border-gray-100 text-center">

@@ -6,12 +6,22 @@ import {
 } from 'lucide-react';
 import StatCard from '../components/ui/StatCard';
 import EnterpriseDashboardPage from './enterprise/EnterpriseDashboardPage';
+import CollectorTasksPage from './collector/CollectorTasksPage';
+import AdminDashboardPage from './admin/AdminDashboardPage';
 
 const DashboardPage = () => {
   const { user } = useAuth();
 
   if (user?.role === 'enterprise') {
     return <EnterpriseDashboardPage />;
+  }
+
+  if (user?.role === 'collector') {
+    return <CollectorTasksPage />;
+  }
+
+  if (user?.role === 'admin') {
+    return <AdminDashboardPage />;
   }
 
   // Fallback to Citizen Dashboard (Default)
