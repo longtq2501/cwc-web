@@ -28,6 +28,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('/requests/{requestId}/confirm', [CitizenRequestController::class, 'confirmCollected']);
         Route::get('/points/history', [CitizenRequestController::class, 'pointHistory']);
         Route::get('/leaderboard', [CitizenRequestController::class, 'leaderboard']);
+        Route::post('/analyze-image', [CitizenRequestController::class, 'analyzeImage']);
     });
 
     Route::prefix('enterprise')->middleware('role:enterprise')->group(function (): void {

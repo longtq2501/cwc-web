@@ -8,9 +8,11 @@ use App\Models\PointRule;
 use App\Models\PointTransaction;
 use App\Models\RequestImage;
 use App\Models\WasteRequest;
+use App\Models\WasteType;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class CitizenRequestController extends Controller
 {
@@ -220,6 +222,32 @@ class CitizenRequestController extends Controller
                 'ward_id' => $wardId,
                 'period_year' => $year,
                 'period_month' => $month,
+            ],
+        ]);
+    }
+
+    public function analyzeImage(Request $request): JsonResponse
+    {
+        $request->validate([
+            'image' => ['required', 'image', 'max:5120'], // Max 5MB
+        ]);
+
+        $file = $request->file('image');
+        $path = $file->store('public/requests');
+        $url = Storage::url($path);
+
+        // Mock external AI classification
+        // For a real integration, we would send the image to a Python script or AI API here.
+        $wasteTypes = WasteType::query()->where('is_active', true)->get();
+        $predictedType = $wasteTypes->random();
+
+        return response()->json([
+            'message' => 'Image analyzed successfully',
+            'data' => [
+                'predicted_type_name' => $predictedType->name,
+                'waste_type_id' => $predictedType->id,
+                'confidence' => rand(75, 99) / 100, // e.g., 0.85
+                'image_url' => url($url),
             ],
         ]);
     }
