@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, AuthState } from '../types/auth';
+import { User, AuthState, Role } from '../types/auth';
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
@@ -18,86 +18,122 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('cwc_user');
-    const savedToken = localStorage.getItem('cwc_token');
+    const initAuth = async () => {
+      const savedToken = localStorage.getItem('cwc_token');
+      
+      if (savedToken) {
+        try {
+          const res = await fetch('/api/auth/me', {
+            headers: { Authorization: `Bearer ${savedToken}` },
+          });
+          
+          if (res.ok) {
+            const data = await res.json();
+            const mappedUser: User = {
+              id: data.user.id,
+              fullName: data.user.full_name,
+              email: data.user.email,
+              phone: data.user.phone,
+              role: data.user.role as Role,
+              wardId: data.user.ward_id,
+            };
+            
+            setAuthState({
+              user: mappedUser,
+              token: savedToken,
+              isAuthenticated: true,
+              isLoading: false,
+            });
+          } else {
+            throw new Error('Session expired');
+          }
+        } catch (e) {
+          localStorage.removeItem('cwc_token');
+          setAuthState(prev => ({ ...prev, isLoading: false }));
+        }
+      } else {
+        setAuthState(prev => ({ ...prev, isLoading: false }));
+      }
+    };
     
-    if (savedUser && savedToken) {
-      setAuthState({
-        user: JSON.parse(savedUser),
-        token: savedToken,
-        isAuthenticated: true,
-        isLoading: false,
-      });
-    } else {
-      setAuthState(prev => ({ ...prev, isLoading: false }));
-    }
+    initAuth();
   }, []);
 
   const login = async (email: string, password: string) => {
-    // Simulating API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
 
-    // Get users from localStorage
-    const users = JSON.parse(localStorage.getItem('cwc_registered_users') || '[]');
-    const foundUser = users.find((u: any) => u.email === email && u.password === password);
+    const data = await res.json();
 
-    if (foundUser) {
-      const { password, ...userWithoutPassword } = foundUser;
-      const mockToken = 'mock-jwt-token-' + Math.random();
+    if (res.ok) {
+      const mappedUser: User = {
+        id: data.user.id,
+        fullName: data.user.full_name,
+        email: data.user.email,
+        phone: data.user.phone,
+        role: data.user.role as Role,
+        wardId: data.user.ward_id,
+      };
       
-      localStorage.setItem('cwc_user', JSON.stringify(userWithoutPassword));
-      localStorage.setItem('cwc_token', mockToken);
+      localStorage.setItem('cwc_token', data.token);
       
       setAuthState({
-        user: userWithoutPassword,
-        token: mockToken,
+        user: mappedUser,
+        token: data.token,
         isAuthenticated: true,
         isLoading: false,
       });
     } else {
-      throw new Error('Email hoặc mật khẩu không chính xác.');
+      throw new Error(data.message || 'Đăng nhập thất bại');
     }
   };
 
-  const register = async (email: string, password: string, fullName: string, role: any) => {
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    // Check if email already exists
-    const users = JSON.parse(localStorage.getItem('cwc_registered_users') || '[]');
-    if (users.some((u: any) => u.email === email)) {
-      throw new Error('Email này đã được đăng ký.');
-    }
-
-    const newUser = {
-      id: Math.random().toString(36).substr(2, 9),
-      email,
-      password, // In real app, never store plain text
-      fullName,
-      role,
-      avatarUrl: '',
-    };
-
-    // Save to the "database" of users
-    users.push(newUser);
-    localStorage.setItem('cwc_registered_users', JSON.stringify(users));
-
-    // Also auto-login the user after registration
-    const { password: _, ...userWithoutPassword } = newUser;
-    const mockToken = 'mock-jwt-token-' + Math.random();
-    
-    localStorage.setItem('cwc_user', JSON.stringify(userWithoutPassword));
-    localStorage.setItem('cwc_token', mockToken);
-
-    setAuthState({
-      user: userWithoutPassword,
-      token: mockToken,
-      isAuthenticated: true,
-      isLoading: false,
+  const register = async (email: string, password: string, fullName: string, role: string) => {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        full_name: fullName,
+        email,
+        password,
+        password_confirmation: password, // Simple confirmation
+        role: role,
+      }),
     });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      const mappedUser: User = {
+        id: data.user.id,
+        fullName: data.user.full_name,
+        email: data.user.email,
+        phone: data.user.phone,
+        role: data.user.role as Role,
+        wardId: data.user.ward_id,
+      };
+      
+      localStorage.setItem('cwc_token', data.token);
+
+      setAuthState({
+        user: mappedUser,
+        token: data.token,
+        isAuthenticated: true,
+        isLoading: false,
+      });
+    } else {
+      throw new Error(data.message || 'Đăng ký thất bại');
+    }
   };
 
   const logout = () => {
-    localStorage.removeItem('cwc_user');
+    fetch('/api/auth/logout', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${authState.token}` },
+    });
     localStorage.removeItem('cwc_token');
     setAuthState({
       user: null,

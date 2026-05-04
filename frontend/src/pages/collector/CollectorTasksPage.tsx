@@ -1,43 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { 
+  Truck, MapPin, CheckCircle, Navigation, 
+  Camera, FileText, Clock, X, Loader2 
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
-import StatCard from '../../components/ui/StatCard';
-import Input from '../../components/ui/Input';
-import { toast } from 'react-hot-toast';
-import { Truck, MapPin, CheckCircle, Navigation, Camera, FileText, Clock } from 'lucide-react';
+import toast from 'react-hot-toast';
 
-interface Task {
-  id: number;
-  status: string;
-  request?: {
-    id: number;
-    waste_type: string;
-    location: string;
-    description: string;
-  };
-}
-
-const CollectorTasksPage: React.FC = () => {
+const CollectorTasksPage = () => {
   const { token } = useAuth();
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showCompleteModal, setShowCompleteModal] = useState<number | null>(null);
+  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Completion form state
-  const [completionData, setCompletionData] = useState({
-    actual_weight_kg: '',
-    proof_image_url: 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&q=80&w=500', // Default placeholder
-    collector_note: '',
+  const [completeData, setCompleteData] = useState({
+    actualWeight: '',
+    note: '',
+    proofImage: null as string | null,
+    proofFile: null as File | null
   });
 
   const fetchTasks = async () => {
+    setLoading(true);
     try {
       const res = await fetch('/api/collector/tasks', {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` }
       });
-      const data = await res.json();
-      setTasks(data.data ?? data);
+      if (res.ok) {
+        const data = await res.json();
+        setReports(data.data || []);
+      }
     } catch (e) {
       toast.error('Không thể tải danh sách nhiệm vụ');
     } finally {
@@ -45,187 +41,216 @@ const CollectorTasksPage: React.FC = () => {
     }
   };
 
+  const setReports = (data: any) => {
+    setTasks(data);
+  };
+
   useEffect(() => {
     fetchTasks();
-  }, [token]);
+  }, []);
 
-  const handleStart = async (assignmentId: number) => {
+  const handleStartTask = async (id: number) => {
     try {
-      const res = await fetch(`/api/collector/tasks/${assignmentId}/start`, {
+      const res = await fetch(`/api/collector/tasks/${id}/start`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        toast.success('Đang di chuyển tới điểm thu gom!');
+        fetchTasks();
+      }
+    } catch (e) {
+      toast.error('Lỗi khi bắt đầu nhiệm vụ');
+    }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setCompleteData({
+        ...completeData,
+        proofFile: file,
+        proofImage: URL.createObjectURL(file)
+      });
+    }
+  };
+
+  const handleCompleteTask = async () => {
+    if (!completeData.proofFile) {
+      toast.error('Vui lòng chụp ảnh bằng chứng thu gom');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // 1. Upload proof image
+      const formData = new FormData();
+      formData.append('image', completeData.proofFile);
+      
+      const uploadRes = await fetch('/api/citizen/analyze-image', { // Reuse the image uploader
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
+        body: formData,
       });
-      if (!res.ok) throw new Error();
-      toast.success('Đã bắt đầu di chuyển!');
-      fetchTasks();
-    } catch (e) {
-      toast.error('Thao tác thất bại');
-    }
-  };
 
-  const handleComplete = async (assignmentId: number) => {
-    try {
-      const res = await fetch(`/api/collector/tasks/${assignmentId}/collect`, {
+      if (!uploadRes.ok) throw new Error('Upload ảnh thất bại');
+      const uploadData = await uploadRes.json();
+      const proofUrl = uploadData.data.image_url;
+
+      // 2. Mark as collected
+      const res = await fetch(`/api/collector/tasks/${selectedTask.id}/collect`, {
         method: 'POST',
-        headers: {
+        headers: { 
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}` 
         },
-        body: JSON.stringify(completionData),
+        body: JSON.stringify({
+          actual_weight_kg: parseFloat(completeData.actualWeight) || 0,
+          proof_image_url: proofUrl,
+          collector_note: completeData.note
+        })
       });
-      if (!res.ok) throw new Error();
-      toast.success('Nhiệm vụ hoàn thành!');
-      setShowCompleteModal(null);
-      fetchTasks();
+
+      if (res.ok) {
+        toast.success('Nhiệm vụ hoàn thành!');
+        setShowCompleteModal(false);
+        setSelectedTask(null);
+        setCompleteData({ actualWeight: '', note: '', proofImage: null, proofFile: null });
+        fetchTasks();
+      }
     } catch (e) {
-      toast.error('Lỗi khi xác nhận hoàn thành');
+      toast.error('Lỗi khi hoàn thành nhiệm vụ');
+    } finally {
+      setIsSubmitting(false);
     }
   };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'assigned': return { label: 'Chờ xử lý', color: 'bg-orange-100 text-orange-700' };
-      case 'on_the_way': return { label: 'Đang di chuyển', color: 'bg-blue-100 text-blue-700' };
-      case 'collected': return { label: 'Đã thu gom', color: 'bg-green-100 text-green-700' };
-      default: return { label: status, color: 'bg-gray-100 text-gray-700' };
-    }
-  };
-
-  if (loading) return <div className="flex justify-center p-12">Đang tải nhiệm vụ...</div>;
 
   return (
     <div className="max-w-md mx-auto space-y-6 pb-20">
-      <div className="px-4">
-        <h1 className="text-2xl font-display font-bold text-gray-900">Nhiệm vụ của tôi 🚛</h1>
-        <p className="text-gray-500 text-sm">Chào Collector! Chúc bạn một ngày làm việc hiệu quả.</p>
+      <div className="flex items-center justify-between px-2">
+        <h1 className="text-2xl font-display font-bold text-gray-900">Nhiệm vụ của tôi</h1>
+        <div className="bg-primary-pale text-primary px-3 py-1 rounded-full text-xs font-bold">
+          {tasks.length} Đang chờ
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 px-4">
-        <StatCard 
-          icon={Clock} 
-          label="Chờ xử lý" 
-          value={tasks.filter(t => t.status === 'assigned').length} 
-          color="bg-orange-500" 
-        />
-        <StatCard 
-          icon={Navigation} 
-          label="Đang đi" 
-          value={tasks.filter(t => t.status === 'on_the_way').length} 
-          color="bg-blue-500" 
-        />
-      </div>
-
-      <div className="space-y-4 px-2">
-        {tasks.map((task) => (
-          <Card key={task.id} className="relative overflow-hidden">
-            <div className={`absolute top-0 left-0 w-1 h-full ${task.status === 'on_the_way' ? 'bg-blue-500' : 'bg-orange-500'}`} />
-            
-            <div className="p-4 space-y-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-xs font-bold text-gray-400 uppercase">Yêu cầu #{task.request?.id}</p>
-                  <h3 className="font-bold text-gray-900">{task.request?.waste_type}</h3>
-                </div>
-                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${getStatusLabel(task.status).color}`}>
-                  {getStatusLabel(task.status).label}
-                </span>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <MapPin className="w-4 h-4 text-primary shrink-0" />
-                  <span className="line-clamp-1">{task.request?.location}</span>
-                </div>
-                {task.request?.description && (
-                  <div className="flex items-start gap-2 text-sm text-gray-500 bg-gray-50 p-2 rounded-lg">
-                    <FileText className="w-4 h-4 mt-0.5 shrink-0" />
-                    <p className="text-xs italic">"{task.request.description}"</p>
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20">
+          <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" />
+          <p className="text-gray-500">Đang tìm nhiệm vụ...</p>
+        </div>
+      ) : tasks.length > 0 ? (
+        <div className="space-y-4">
+          {tasks.map((task: any) => (
+            <Card key={task.id} className="border-gray-100 hover:border-primary transition-all">
+              <div className="space-y-4">
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center">
+                      <Clock className="w-5 h-5 text-amber-500" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-gray-900 capitalize">{task.request?.waste_type?.name || 'Rác'}</h4>
+                      <p className="text-[10px] text-gray-400">#{task.request?.id}</p>
+                    </div>
                   </div>
-                )}
-              </div>
+                  <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${
+                    task.status === 'on_the_way' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'
+                  }`}>
+                    {task.status === 'on_the_way' ? 'Đang di chuyển' : 'Mới gán'}
+                  </span>
+                </div>
 
-              <div className="pt-2 border-t border-gray-100 flex gap-2">
-                {task.status === 'assigned' && (
-                  <Button 
-                    fullWidth 
-                    variant="primary" 
-                    leftIcon={<Navigation className="w-4 h-4" />}
-                    onClick={() => handleStart(task.id)}
-                  >
-                    Bắt đầu đi
-                  </Button>
-                )}
-                {task.status === 'on_the_way' && (
-                  <Button 
-                    fullWidth 
-                    variant="enterprise" 
-                    leftIcon={<CheckCircle className="w-4 h-4" />}
-                    onClick={() => setShowCompleteModal(task.id)}
-                  >
-                    Hoàn thành
-                  </Button>
-                )}
-                <Button 
-                  variant="outline" 
-                  className="!px-4"
-                  onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(task.request?.location || '')}`)}
-                >
-                  <Navigation className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </Card>
-        ))}
-        {tasks.length === 0 && (
-          <Card className="text-center py-12">
-            <p className="text-gray-500">Chưa có nhiệm vụ nào được phân công.</p>
-          </Card>
-        )}
-      </div>
-
-      {/* Completion Modal */}
-      {showCompleteModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-sm rounded-[2rem] p-6 space-y-6 animate-in slide-in-from-bottom duration-300">
-            <h3 className="text-xl font-bold text-gray-900">Xác nhận hoàn thành</h3>
-            
-            <div className="space-y-4">
-              <Input 
-                label="Khối lượng thực tế (kg)" 
-                type="number" 
-                placeholder="Ví dụ: 5.5"
-                value={completionData.actual_weight_kg}
-                onChange={e => setCompletionData({...completionData, actual_weight_kg: e.target.value})}
-              />
-              
-              <div className="space-y-2">
-                <label className="block text-sm font-bold text-gray-700">Hình ảnh xác nhận</label>
-                <div className="w-full aspect-video bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary transition-all overflow-hidden relative group">
-                  <img src={completionData.proof_image_url} alt="Proof" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
-                    <Camera className="text-white w-8 h-8" />
+                <div className="space-y-2 text-sm text-gray-600">
+                  <div className="flex items-start gap-2">
+                    <MapPin className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                    <span className="font-medium">{task.request?.address_detail}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-gray-400" />
+                    <span>{task.request?.estimated_weight_kg || 0} kg ước tính</span>
                   </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <label className="block text-sm font-bold text-gray-700">Ghi chú (nếu có)</label>
-                <textarea 
-                  className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-primary transition-all outline-none text-sm min-h-[80px]"
-                  placeholder="Người dân nhiệt tình, rác đã phân loại tốt..."
-                  value={completionData.collector_note}
-                  onChange={e => setCompletionData({...completionData, collector_note: e.target.value})}
-                />
+                <div className="flex gap-3 pt-2">
+                  {task.status === 'accepted' || task.status === 'assigned' ? (
+                    <Button fullWidth onClick={() => handleStartTask(task.id)} leftIcon={<Navigation className="w-4 h-4" />}>
+                      Bắt đầu đi
+                    </Button>
+                  ) : (
+                    <Button fullWidth className="bg-green-500 hover:bg-green-600" onClick={() => { setSelectedTask(task); setShowCompleteModal(true); }} leftIcon={<CheckCircle className="w-4 h-4" />}>
+                      Đã thu gom
+                    </Button>
+                  )}
+                </div>
               </div>
-            </div>
-
-            <div className="flex gap-3">
-              <Button variant="outline" fullWidth onClick={() => setShowCompleteModal(null)}>Hủy</Button>
-              <Button variant="primary" fullWidth onClick={() => handleComplete(showCompleteModal)}>Xác nhận</Button>
-            </div>
-          </div>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
+          <Truck className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500 font-medium">Tuyệt vời! Không còn nhiệm vụ nào.</p>
         </div>
       )}
+
+      {/* Complete Task Modal */}
+      <AnimatePresence>
+        {showCompleteModal && (
+          <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm">
+            <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 25 }} className="bg-white w-full max-w-lg rounded-t-[2.5rem] sm:rounded-[2.5rem] p-8 pb-10">
+              <div className="flex justify-between items-center mb-8">
+                <h3 className="text-2xl font-bold text-gray-900">Xác nhận thu gom</h3>
+                <button onClick={() => setShowCompleteModal(false)} className="p-2 bg-gray-50 rounded-full"><X className="w-5 h-5" /></button>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-4">Chụp ảnh bằng chứng *</label>
+                  <div className="relative aspect-video rounded-3xl bg-gray-50 border-2 border-dashed border-gray-200 overflow-hidden group">
+                    {completeData.proofImage ? (
+                      <img src={completeData.proofImage} alt="Proof" className="w-full h-full object-cover" />
+                    ) : (
+                      <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer">
+                        <Camera className="w-10 h-10 text-gray-300 mb-2 group-hover:text-primary transition-colors" />
+                        <span className="text-xs text-gray-400">Click để chụp/tải ảnh</span>
+                        <input type="file" capture="environment" className="hidden" onChange={handleImageChange} />
+                      </label>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Khối lượng thực tế (kg)</label>
+                    <input
+                      type="number"
+                      className="w-full px-4 py-4 bg-gray-50 border-transparent focus:bg-white focus:border-primary border-2 rounded-2xl outline-none text-sm font-bold"
+                      placeholder="0.0"
+                      value={completeData.actualWeight}
+                      onChange={(e) => setCompleteData({ ...completeData, actualWeight: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Ghi chú</label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-4 bg-gray-50 border-transparent focus:bg-white focus:border-primary border-2 rounded-2xl outline-none text-sm"
+                      placeholder="Ghi chú thêm..."
+                      value={completeData.note}
+                      onChange={(e) => setCompleteData({ ...completeData, note: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <Button fullWidth size="lg" isLoading={isSubmitting} onClick={handleCompleteTask}>
+                  Hoàn tất thu gom
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

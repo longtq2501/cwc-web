@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { 
   User, Mail, Lock, ShieldCheck, ArrowRight, 
-  CheckCircle2, Building2, MapPin, 
+  CheckCircle2, Building2, MapPin, Truck,
   ChevronLeft, KeyRound
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -24,7 +24,7 @@ const RegisterPage = () => {
     fullName: '',
     email: '',
     password: '',
-    role: 'citizen' as 'citizen' | 'enterprise',
+    role: 'citizen' as 'citizen' | 'enterprise' | 'collector',
     phone: '',
     ward: '',
     businessId: '',

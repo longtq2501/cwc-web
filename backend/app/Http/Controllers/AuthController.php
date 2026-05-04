@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Collector;
+use App\Models\RecyclingEnterprise;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -19,18 +21,20 @@ class AuthController extends Controller
             'phone' => ['nullable', 'string', 'max:20', 'unique:users,phone'],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
             'ward_id' => ['nullable', 'integer', 'exists:wards,id'],
+            'role' => ['nullable', 'string', 'in:citizen,enterprise,collector'],
         ]);
 
-        $citizenRoleId = Role::query()->where('name', 'citizen')->value('id');
+        $roleName = $request->input('role', 'citizen');
+        $roleId = Role::query()->where('name', $roleName)->value('id');
 
-        if (!$citizenRoleId) {
+        if (!$roleId) {
             throw ValidationException::withMessages([
-                'role' => ['Citizen role is not seeded yet.'],
+                'role' => ["Role {$roleName} is not seeded yet."],
             ]);
         }
 
         $user = User::query()->create([
-            'role_id' => $citizenRoleId,
+            'role_id' => $roleId,
             'full_name' => $validated['full_name'],
             'email' => $validated['email'],
             'phone' => $validated['phone'] ?? null,
@@ -39,6 +43,24 @@ class AuthController extends Controller
             'is_active' => true,
             'is_deleted' => false,
         ]);
+
+        // Auto-create profiles based on role
+        if ($roleName === 'enterprise') {
+            RecyclingEnterprise::query()->create([
+                'user_id' => $user->id,
+                'enterprise_name' => $user->full_name,
+                'status' => 'pending', // Admins need to approve
+            ]);
+        } elseif ($roleName === 'collector') {
+            // Find the first enterprise to assign to this collector (for testing/demo)
+            $firstEnterprise = RecyclingEnterprise::query()->first();
+            
+            Collector::query()->create([
+                'user_id' => $user->id,
+                'enterprise_id' => $firstEnterprise ? $firstEnterprise->id : 1, // Fallback to ID 1
+                'status' => 'active',
+            ]);
+        }
 
         $user->load('role');
         $token = $user->createToken('api-token')->plainTextToken;

@@ -1,28 +1,34 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { 
   Camera, MapPin, Info, Send, Loader2, 
   Leaf, Recycle, BatteryWarning, Sofa, Laptop, Box,
   CheckCircle2, AlertCircle, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import toast from 'react-hot-toast';
 
 const WASTE_TYPES = [
-  { id: 'organic', name: 'Rác Hữu Cơ', icon: Leaf, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-100' },
-  { id: 'recyclable', name: 'Rác Tái Chế', icon: Recycle, color: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-100' },
-  { id: 'hazardous', name: 'Rác Nguy Hại', icon: BatteryWarning, color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-100' },
-  { id: 'bulky', name: 'Rác Cồng Kềnh', icon: Sofa, color: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-100' },
-  { id: 'electronic', name: 'Rác Điện Tử', icon: Laptop, color: 'text-gray-700', bg: 'bg-gray-50', border: 'border-gray-100' },
-  { id: 'other', name: 'Loại Khác', icon: Box, color: 'text-gray-400', bg: 'bg-gray-50', border: 'border-gray-100' },
+  { id: 1, name: 'Rác Hữu Cơ', icon: Leaf, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-100', slug: 'organic' },
+  { id: 2, name: 'Rác Tái Chế', icon: Recycle, color: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-100', slug: 'recyclable' },
+  { id: 3, name: 'Rác Nguy Hại', icon: BatteryWarning, color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-100', slug: 'hazardous' },
+  { id: 4, name: 'Rác Cồng Kềnh', icon: Sofa, color: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-100', slug: 'bulky' },
+  { id: 5, name: 'Rác Điện Tử', icon: Laptop, color: 'text-gray-700', bg: 'bg-gray-50', border: 'border-gray-100', slug: 'electronic' },
+  { id: 6, name: 'Loại Khác', icon: Box, color: 'text-gray-400', bg: 'bg-gray-50', border: 'border-gray-100', slug: 'other' },
 ];
 
 const CreateReportPage = () => {
   const navigate = useNavigate();
+  const { user, token } = useAuth();
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  
   const [formData, setFormData] = useState({
-    image: null as string | null,
-    wasteType: '',
+    imageUrl: null as string | null,
+    previewUrl: null as string | null,
+    wasteTypeId: null as number | null,
     description: '',
     address: '',
     latitude: null as number | null,
@@ -30,15 +36,39 @@ const CreateReportPage = () => {
     estimatedWeight: '',
   });
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, image: reader.result as string });
-        setStep(2); // Auto move to next step after photo
-      };
-      reader.readAsDataURL(file);
+      // Preview
+      setFormData(prev => ({ ...prev, previewUrl: URL.createObjectURL(file) }));
+      setStep(2);
+
+      // Analyze image
+      setIsAnalyzing(true);
+      const formDataUpload = new FormData();
+      formDataUpload.append('image', file);
+
+      try {
+        const res = await fetch('/api/citizen/analyze-image', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: formDataUpload,
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setFormData(prev => ({ 
+            ...prev, 
+            imageUrl: data.data.image_url,
+            wasteTypeId: data.data.waste_type_id 
+          }));
+          toast.success(`Hệ thống nhận diện: ${data.data.predicted_type_name}`);
+        }
+      } catch (error) {
+        toast.error('Không thể phân tích ảnh. Vui lòng chọn loại rác thủ công.');
+      } finally {
+        setIsAnalyzing(false);
+      }
     }
   };
 
@@ -55,6 +85,7 @@ const CreateReportPage = () => {
         },
         (error) => {
           console.error("Error getting location", error);
+          toast.error('Không thể lấy vị trí. Vui lòng nhập địa chỉ thủ công.');
         }
       );
     }
@@ -62,12 +93,43 @@ const CreateReportPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.imageUrl) {
+      toast.error('Vui lòng chờ ảnh tải lên hoàn tất.');
+      return;
+    }
+
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/citizen/requests', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify({
+          waste_type_id: formData.wasteTypeId,
+          ward_id: user?.wardId || 1, // Fallback to 1 if not set
+          address_detail: formData.address,
+          latitude: formData.latitude,
+          longitude: formData.longitude,
+          description: formData.description,
+          estimated_weight_kg: parseFloat(formData.estimatedWeight) || null,
+          image_urls: [formData.imageUrl]
+        }),
+      });
+
+      if (res.ok) {
+        toast.success('Báo cáo đã được gửi thành công!');
+        navigate('/reports', { state: { success: true } });
+      } else {
+        const data = await res.json();
+        toast.error(data.message || 'Gửi báo cáo thất bại.');
+      }
+    } catch (error) {
+      toast.error('Lỗi kết nối máy chủ.');
+    } finally {
       setIsLoading(false);
-      navigate('/reports', { state: { success: true } });
-    }, 2000);
+    }
   };
 
   return (
@@ -101,20 +163,26 @@ const CreateReportPage = () => {
 
           {/* Step 2: Form Details */}
           <div className={`${step !== 2 && 'hidden'}`}>
-            {formData.image && (
+            {formData.previewUrl && (
               <div className="relative h-64 w-full">
-                <img src={formData.image} alt="Waste" className="w-full h-full object-cover" />
+                <img src={formData.previewUrl} alt="Waste" className="w-full h-full object-cover" />
                 <button 
                   type="button"
-                  onClick={() => { setFormData({...formData, image: null}); setStep(1); }}
+                  onClick={() => { setFormData({...formData, previewUrl: null, imageUrl: null}); setStep(1); }}
                   className="absolute top-4 right-4 bg-black/50 text-white p-2 rounded-full hover:bg-black/70"
                 >
                   <X className="w-5 h-5" />
                 </button>
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-6">
-                  <span className="bg-primary text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 w-fit">
-                    <CheckCircle2 className="w-3 h-3" /> Ảnh đã tải lên
-                  </span>
+                  {isAnalyzing ? (
+                    <span className="bg-white/20 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-2 w-fit">
+                      <Loader2 className="w-3 h-3 animate-spin" /> Đang nhận diện rác bằng AI...
+                    </span>
+                  ) : (
+                    <span className="bg-primary text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 w-fit">
+                      <CheckCircle2 className="w-3 h-3" /> Ảnh đã sẵn sàng
+                    </span>
+                  )}
                 </div>
               </div>
             )}
@@ -128,12 +196,12 @@ const CreateReportPage = () => {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {WASTE_TYPES.map((type) => {
                     const Icon = type.icon;
-                    const isSelected = formData.wasteType === type.id;
+                    const isSelected = formData.wasteTypeId === type.id;
                     return (
                       <button
                         key={type.id}
                         type="button"
-                        onClick={() => setFormData({ ...formData, wasteType: type.id })}
+                        onClick={() => setFormData({ ...formData, wasteTypeId: type.id })}
                         className={`flex flex-col items-center p-4 rounded-2xl border-2 transition-all ${
                           isSelected 
                             ? `border-primary ${type.bg} ${type.color}` 
@@ -146,7 +214,7 @@ const CreateReportPage = () => {
                     );
                   })}
                 </div>
-                {formData.wasteType === 'hazardous' && (
+                {formData.wasteTypeId === 3 && (
                   <div className="mt-4 bg-red-50 border border-red-100 p-4 rounded-xl flex items-start gap-3">
                     <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                     <p className="text-xs text-red-700 leading-relaxed">
@@ -220,7 +288,7 @@ const CreateReportPage = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={isLoading || !formData.wasteType || !formData.address}
+                  disabled={isLoading || !formData.wasteTypeId || !formData.address || !formData.imageUrl}
                   className="flex-[2] bg-primary text-white font-bold py-4 rounded-2xl hover:bg-primary-mid transition-all shadow-lg hover:shadow-primary/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isLoading ? (
