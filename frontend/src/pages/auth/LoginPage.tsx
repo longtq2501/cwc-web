@@ -54,19 +54,19 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 sm:p-6 py-12">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-lg"
       >
-        <Card className="p-8 md:p-12">
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-pale rounded-2xl text-primary mb-6">
-              <LogIn className="w-8 h-8" />
+        <Card className="p-6 sm:p-8 md:p-12">
+          <div className="text-center mb-8 sm:mb-10">
+            <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-primary-pale rounded-2xl text-primary mb-6">
+              <LogIn className="w-6 h-6 sm:w-8 sm:h-8" />
             </div>
-            <h1 className="text-3xl font-display font-bold text-gray-900 mb-2">Mừng bạn trở lại!</h1>
-            <p className="text-gray-500">Đăng nhập để tiếp tục hành trình xanh</p>
+            <h1 className="text-2xl sm:text-3xl font-display font-bold text-gray-900 mb-2">Mừng bạn trở lại!</h1>
+            <p className="text-sm sm:text-base text-gray-500">Đăng nhập để tiếp tục hành trình xanh</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -90,16 +90,16 @@ const LoginPage = () => {
               />
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <label className="flex items-center gap-2 cursor-pointer group">
                 <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary" />
-                <span className="text-sm text-gray-500 group-hover:text-gray-700">Ghi nhớ đăng nhập</span>
+                <span className="text-xs sm:text-sm text-gray-500 group-hover:text-gray-700">Ghi nhớ đăng nhập</span>
               </label>
-              <a href="#" className="text-sm font-bold text-primary hover:underline">Quên mật khẩu?</a>
+              <a href="#" className="text-xs sm:text-sm font-bold text-primary hover:underline">Quên mật khẩu?</a>
             </div>
 
             {error && (
-              <div className="p-4 bg-red-50 rounded-2xl text-red-500 text-sm font-medium text-center">
+              <div className="p-4 bg-red-50 rounded-2xl text-red-500 text-xs sm:text-sm font-medium text-center">
                 {error}
               </div>
             )}
@@ -113,17 +113,9 @@ const LoginPage = () => {
             >
               Đăng nhập ngay
             </Button>
-
-            <button
-              type="button"
-              onClick={handleMockAdminLogin}
-              className="w-full py-3 border-2 border-dashed border-gray-200 rounded-2xl text-xs font-bold text-gray-400 hover:border-primary hover:text-primary transition-all flex items-center justify-center gap-2"
-            >
-              🚀 DEBUG: Vào nhanh giao diện Admin (UI Test)
-            </button>
           </form>
 
-          <div className="mt-10 pt-10 border-t border-gray-100 text-center">
+          <div className="mt-8 sm:mt-10 pt-8 sm:pt-10 border-t border-gray-100 text-center">
             <p className="text-gray-500 text-sm">
               Chưa có tài khoản?{' '}
               <Link to="/register" className="text-primary font-bold hover:underline">Đăng ký ngay</Link>
