@@ -77,12 +77,15 @@ const MainLayout = () => {
         } lg:relative lg:translate-x-0`}
       >
         <div className="h-full flex flex-col p-6">
-          <div className="flex items-center gap-3 mb-10">
-            <div className="bg-primary p-2 rounded-lg">
+          <Link 
+            to="/" 
+            className="flex items-center gap-3 mb-10 hover:opacity-80 transition-opacity cursor-pointer group"
+          >
+            <div className="bg-primary p-2 rounded-lg group-hover:scale-110 transition-transform shadow-sm shadow-primary/20">
               <Recycle className="text-white w-6 h-6" />
             </div>
-            <span className="font-display font-bold text-xl text-primary">EcoCollect</span>
-          </div>
+            <span className="font-display font-bold text-xl text-primary tracking-tight">EcoCollect</span>
+          </Link>
 
           <nav className="flex-1 space-y-2">
             {currentMenuItems.map((item) => (

@@ -23,12 +23,12 @@ const Navbar = () => {
   return (
     <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white shadow-md py-3' : 'bg-transparent py-5'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <div className="bg-primary p-2 rounded-lg">
+        <Link to="/" className="flex items-center gap-2 cursor-pointer group hover:opacity-80 transition-opacity">
+          <div className="bg-primary p-2 rounded-lg group-hover:scale-110 transition-transform shadow-sm shadow-primary/20">
             <Recycle className="text-white w-6 h-6" />
           </div>
-          <span className="font-display font-bold text-xl text-primary">EcoCollect</span>
-        </div>
+          <span className="font-display font-bold text-xl text-primary tracking-tight">EcoCollect</span>
+        </Link>
         
         <div className="hidden lg:flex items-center gap-8">
           <a href="#features" className="text-gray-600 hover:text-primary font-medium transition-colors">Tính năng</a>
