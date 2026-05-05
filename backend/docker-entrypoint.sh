@@ -33,6 +33,10 @@ php artisan migrate --force
 echo "Seeding database..."
 php artisan db:seed --force
 
+# Create storage link
+echo "Creating storage link..."
+php artisan storage:link --force || true
+
 # Start the application
 echo "Starting Laravel server..."
 exec "$@"

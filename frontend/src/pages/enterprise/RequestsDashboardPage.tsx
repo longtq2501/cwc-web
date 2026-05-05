@@ -108,7 +108,14 @@ const RequestsDashboardPage = () => {
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center">
                       {req.images?.[0] ? (
-                        <img src={req.images[0].image_url} alt="" className="w-full h-full object-cover rounded-2xl" />
+                        <img 
+                          src={req.images[0].image_url} 
+                          alt="" 
+                          className="w-full h-full object-cover rounded-2xl" 
+                          onError={(e) => {
+                            (e.currentTarget.src = 'https://placehold.co/400x400?text=No+Image');
+                          }}
+                        />
                       ) : (
                         <AlertCircle className="w-6 h-6 text-gray-300" />
                       )}
@@ -161,7 +168,14 @@ const RequestsDashboardPage = () => {
                   <div className="space-y-6">
                     <div className="h-48 rounded-2xl overflow-hidden bg-gray-100">
                       {selectedRequest.images?.[0] ? (
-                        <img src={selectedRequest.images[0].image_url} alt="" className="w-full h-full object-cover" />
+                        <img 
+                          src={selectedRequest.images[0].image_url} 
+                          alt="" 
+                          className="w-full h-full object-cover" 
+                          onError={(e) => {
+                            (e.currentTarget.src = 'https://placehold.co/800x600?text=Image+Not+Found');
+                          }}
+                        />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-300">Không có ảnh</div>
                       )}

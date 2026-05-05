@@ -39,7 +39,7 @@ class WasteRequestSeeder extends Seeder
         DB::table('request_images')->updateOrInsert(
             ['request_id' => $requestId],
             [
-                'image_url' => 'https://example.com/waste-organic.jpg',
+                'image_url' => 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&q=80&w=1000',
                 'is_primary' => true,
                 'uploaded_at' => now(),
             ]

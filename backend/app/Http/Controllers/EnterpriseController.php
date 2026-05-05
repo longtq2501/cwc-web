@@ -23,6 +23,7 @@ class EnterpriseController extends Controller
         }
 
         $collectors = Collector::query()
+            ->with('user')
             ->where('enterprise_id', $enterprise->id)
             ->where('is_deleted', false)
             ->get();

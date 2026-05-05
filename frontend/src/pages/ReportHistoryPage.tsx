@@ -31,7 +31,14 @@ const ReportCard = ({ report, onConfirm, onComplaint }: any) => {
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-primary-pale flex items-center justify-center text-primary shrink-0">
               {primaryImage ? (
-                <img src={primaryImage} alt="" className="w-full h-full object-cover rounded-2xl" />
+                <img 
+                  src={primaryImage} 
+                  alt="" 
+                  className="w-full h-full object-cover rounded-2xl" 
+                  onError={(e) => {
+                    (e.currentTarget.src = 'https://placehold.co/400x400?text=No+Image');
+                  }}
+                />
               ) : (
                 <ImageIcon className="w-6 h-6" />
               )}

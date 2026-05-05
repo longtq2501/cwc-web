@@ -150,7 +150,14 @@ const MainLayout = () => {
               </div>
               <div className="w-10 h-10 bg-primary-pale rounded-xl flex items-center justify-center text-primary">
                 {user?.avatarUrl ? (
-                  <img src={user.avatarUrl} alt="" className="w-full h-full rounded-xl object-cover" />
+                  <img 
+                    src={user.avatarUrl} 
+                    alt="" 
+                    className="w-full h-full rounded-xl object-cover" 
+                    onError={(e) => {
+                      (e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.fullName || 'User')}&background=random`);
+                    }}
+                  />
                 ) : (
                   <User className="w-6 h-6" />
                 )}
