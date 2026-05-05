@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { 
   Leaf, Recycle, Truck, ShieldCheck, 
@@ -761,12 +761,12 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
           <div>
-            <div className="flex items-center gap-2 mb-6">
-              <div className="bg-primary p-2 rounded-lg">
+            <Link to="/" className="flex items-center gap-2 mb-6 cursor-pointer group hover:opacity-80 transition-opacity">
+              <div className="bg-primary p-2 rounded-lg group-hover:scale-110 transition-transform shadow-sm shadow-primary/20">
                 <Recycle className="text-white w-6 h-6" />
               </div>
-              <span className="font-display font-bold text-xl text-white">EcoCollect</span>
-            </div>
+              <span className="font-display font-bold text-xl text-white tracking-tight">EcoCollect</span>
+            </Link>
             <p className="text-gray-400 mb-6">
               Phân loại đúng – Thu gom đúng giờ – Nhận thưởng xứng đáng.
             </p>
